@@ -1,6 +1,4 @@
 import React, {Component} from 'react';
-import MainLayout from '../layout';
-
 
 interface Props {
 
@@ -13,9 +11,7 @@ class Users extends Component<Props, State> {
     //
     render() {
         return (
-            <MainLayout>
-                {'Fields Page'}
-            </MainLayout>
+            "Users Page"
         );
     }
 }
