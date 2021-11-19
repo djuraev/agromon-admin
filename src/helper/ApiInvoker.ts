@@ -6,24 +6,24 @@ class ApiInvoker {
         //
     }
 
-    public static InvokeGet(url: string) {
-        axios({
-            url: url,
-            method: 'GET',
-            })
-            .then(response => {
-                const requestFailed = response.data.requestFailed;
-                if (!requestFailed) {
-                    return response.data.entities;
-                }
-                else {
-                    alert(response.data.failureMessage.exceptionMessage);
-                }
-            })
-            .catch(error => {
-                alert(error);
-            })
-        return [];
+     static async InvokeGet(url: string): Promise<any> {
+         axios({
+             url: url,
+             method: 'GET',
+         })
+             .then(response => {
+                 const requestFailed = response.data.requestFailed;
+                 if (!requestFailed) {
+                     return response.data.entities;
+                 } else {
+                     alert(response.data.failureMessage.exceptionMessage);
+                 }
+             })
+             .catch(error => {
+                 alert(error);
+             });
+
+        //return [];
     }
 }
 

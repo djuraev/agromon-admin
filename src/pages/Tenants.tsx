@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
-import ApiInvoker from '../helper/ApiInvoker';
-import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
 import TenantDto from '../data-model/TenantDto';
 import {mainServer, tenant} from '../config/mainConfig';
+import axios from 'axios';
+import TenantsTable from '../comp/TenantsTable';
 
 interface Props {
 
@@ -24,39 +25,37 @@ class Tenants extends Component<Props, State> {
         }
     }
 
-    componentDidMount() {
-        const tenantList = ApiInvoker.InvokeGet(mainServer+tenant+"/tenants");
-        this.setState({tenants: tenantList});
+    async componentDidMount() {
+      this.retrieveTenants();
+    }
+
+    retrieveTenants() {
+        const url = mainServer + tenant + "/tenants";
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({tenants: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+
     }
 
     render() {
-        const {tenants} = this.state;
+
         return (
-           <TableContainer>
-               <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                   <TableHead>
-                       <TableRow>
-                           <TableCell>ID</TableCell>
-                           <TableCell align="right">Country Name</TableCell>
-                           <TableCell align="right">Code</TableCell>
-                       </TableRow>
-                   </TableHead>
-                   <TableBody>
-                       {tenants.map((tenant) => (
-                           <TableRow
-                               key={tenant.id}
-                               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                           >
-                               <TableCell>
-                                   {tenant.id}
-                               </TableCell>
-                               <TableCell align="right">{tenant.country}</TableCell>
-                               <TableCell align="right">{tenant.code}</TableCell>
-                           </TableRow>
-                       ))}
-                   </TableBody>
-               </Table>
-           </TableContainer>
+            <Paper style={{padding: 2}}>
+                <TenantsTable/>
+            </Paper>
+
         );
     }
 }

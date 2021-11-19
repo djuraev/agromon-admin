@@ -18,6 +18,7 @@ import Villages from '../pages/Villages';
 import RegionDistricts from '../pages/RegionDistricts';
 import Fields from '../pages/fields';
 import 'react-pro-sidebar/dist/css/styles.css';
+import logo from '../img/logo.png';
 
 interface State {
 
@@ -34,9 +35,11 @@ class MainLayout extends Component<State, Props> {
 
             <Grid container style={{paddingTop: 10, paddingLeft: 10, paddingRight: 10}}>
                 <BrowserRouter>
-                <Grid item xs={2} style={{backgroundColor: 'red', height: 80}}>
+                <Grid item xs={2} style={{height: 80, backgroundColor: '#202020'}}>
+                    <img src={logo} height={80}/>
                 </Grid>
-                <Grid item xs={10} style={{backgroundColor: 'green'}}>
+                <Grid item xs={10} style={{backgroundColor: '#202020'}}>
+                    <Paper />
                 </Grid>
                 <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
                     <ProSidebar style={{backgroundColor: '#202020'}}>
