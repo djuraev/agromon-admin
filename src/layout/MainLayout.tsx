@@ -87,7 +87,6 @@ class MainLayout extends Component<State, Props> {
                     </ProSidebar>
                 </Grid>
                 <Grid item xs={10} style={{height: '95vh'}}>
-                    <Paper>
                         <Switch>
                             <Route path='/dashboard'>
                                 <Dashboard/>
@@ -111,7 +110,6 @@ class MainLayout extends Component<State, Props> {
                                 <RegionDistricts/>
                             </Route>
                         </Switch>
-                    </Paper>
                 </Grid>
                 </BrowserRouter>
             </Grid>

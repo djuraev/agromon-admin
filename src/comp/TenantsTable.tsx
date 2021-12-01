@@ -3,6 +3,7 @@ import TenantDto from '../data-model/TenantDto';
 import {mainServer, tenant} from '../config/mainConfig';
 import axios from 'axios';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 
 
 interface Props {
@@ -49,9 +50,9 @@ class TenantsTable extends React.Component<Props, State> {
     render() {
         const {tenants} = this.state;
         return (
-            <Paper style={{width: 500, borderRadius: 3}}>
+            <Paper style={{borderRadius: 3, padding: 5}}>
                 <TableContainer>
-                    <Table sx={{ maxWidth: 500 }} aria-label="simple table">
+                    <Table sx={{ maxWidth: 500, maxHeight: 600}} aria-label="simple table">
                         <TableHead style={{backgroundColor: 'whitesmoke'}}>
                             <TableRow>
                                 <TableCell align="center">ID</TableCell>
