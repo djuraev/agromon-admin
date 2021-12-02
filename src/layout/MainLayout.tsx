@@ -43,7 +43,6 @@ class MainLayout extends Component<State, Props> {
                 </Grid>
                 <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
                     <ProSidebar style={{backgroundColor: '#202020'}}>
-
                             <Menu iconShape="square" style={{alignItems: 'center'}}>
                             <MenuItem icon={<DashboardRoundedIcon />}>
                                 <Link to={"/dashboard"}>
@@ -86,6 +85,9 @@ class MainLayout extends Component<State, Props> {
 
                     </ProSidebar>
                 </Grid>
+
+
+
                 <Grid item xs={10} style={{height: '95vh'}}>
                         <Switch>
                             <Route path='/dashboard'>

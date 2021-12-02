@@ -100,7 +100,7 @@ class Tenants extends Component<Props, State> {
                               <CardContent>
                                   <Typography>Users</Typography>
                                   <Divider/>
-                                  <Typography>100</Typography>
+                                  <Typography>500</Typography>
                               </CardContent>
                           </Card>
                       </Grid>
@@ -151,7 +151,7 @@ class Tenants extends Component<Props, State> {
                   <Button style={{width: 250}} variant="outlined">+ Add New Tenant</Button>
               </Grid>
               <Grid xs={12}>
-                  <Dialog open={true}>
+                  <Dialog open={false}>
                       <DialogTitle>Add new Country (Tenant)</DialogTitle>
                   </Dialog>
                   <DialogContent>

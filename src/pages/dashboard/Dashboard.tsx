@@ -14,7 +14,7 @@ class Dashboard extends Component<Props, State> {
     //
     render() {
         return (
-             "This is Dashboard"
+             "This is Dashboard for test purpose."
         );
     }
 }
