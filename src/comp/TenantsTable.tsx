@@ -25,7 +25,7 @@ class TenantsTable extends React.Component<Props, State> {
     }
 
     async componentDidMount() {
-        this.retrieveTenants();
+       // this.retrieveTenants();
     }
 
     retrieveTenants() {
@@ -50,7 +50,7 @@ class TenantsTable extends React.Component<Props, State> {
     render() {
         const {tenants} = this.state;
         return (
-            <Paper style={{borderRadius: 3, padding: 5}}>
+            <Paper style={{borderRadius: 3}}>
                 <TableContainer>
                     <Table sx={{ maxWidth: 500, maxHeight: 600}} aria-label="simple table">
                         <TableHead style={{backgroundColor: 'whitesmoke'}}>

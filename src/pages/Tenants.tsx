@@ -3,7 +3,7 @@ import {
     Button,
     Card,
     CardContent, CardMedia, Dialog, DialogActions, DialogTitle, Divider,
-    Grid,
+    Grid, Paper, TextField,
     Typography
 } from '@mui/material';
 import TenantDto from '../data-model/TenantDto';
@@ -16,8 +16,6 @@ import ReactMapboxGl from "react-mapbox-gl";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import FormControl from '@mui/material/FormControl';
 
 const Map = ReactMapboxGl({
     accessToken:
@@ -31,6 +29,7 @@ interface Props {
 interface State {
     tenants: TenantDto[];
     mapViewStyle: string;
+    isDialogOpen: boolean;
 }
 
 
@@ -42,12 +41,13 @@ class Tenants extends Component<Props, State> {
 
         this.state = {
             tenants: [],
-            mapViewStyle: "mapbox://styles/mapbox/satellite-v9"
+            mapViewStyle: "mapbox://styles/mapbox/satellite-v9",
+            isDialogOpen: false,
         }
     }
 
     async componentDidMount() {
-      this.retrieveTenants();
+      //this.retrieveTenants();
     }
 
     retrieveTenants() {
@@ -81,65 +81,43 @@ class Tenants extends Component<Props, State> {
         console.log(features[0].geometry.coordinates);
     };
 
+    onClickCancel() {
+        this.setState({isDialogOpen: false});
+    }
+
+    onClickSave() {
+        this.setState({isDialogOpen: false})
+    }
+
+    onClickAddNewTenant() {
+        this.setState({isDialogOpen: true})
+    }
+
     render() {
+        const { isDialogOpen } = this.state;
         return (
           <Grid container spacing={2}>
               <Grid item xs={12} style={{textAlign: 'center'}}>
-                  <Typography>Tenants Info</Typography>
+                  <h3>Tenants Info</h3>
               </Grid>
               <Grid item xs={4}>
                   <TenantsTable/>
               </Grid>
-              <Grid item xs={8}>
+              <Grid item xs={7}>
                   <Grid container spacing={1}>
-                      <Grid item xs={4}>
-                          <Card>
-                              <CardMedia style={{alignItems: 'flex-start'}}>
-                                  <AccountBoxIcon/>
-                              </CardMedia>
-                              <CardContent>
-                                  <Typography>Users</Typography>
-                                  <Divider/>
-                                  <Typography>500</Typography>
-                              </CardContent>
-                          </Card>
-                      </Grid>
-                      <Grid item xs={4}>
-                          <Card>
-                              <CardMedia style={{alignItems: 'flex-start'}}>
-                                  <NaturePeopleIcon/>
-                              </CardMedia>
-                              <CardContent>
-                                  <Typography>Villages</Typography>
-                                  <Divider/>
-                                  <Typography>50</Typography>
-                              </CardContent>
-                          </Card>
-                      </Grid>
-                      <Grid item xs={4}>
-                          <Card>
-                              <CardMedia style={{alignItems: 'flex-start'}}>
-                                  <NaturePeopleIcon/>
-                              </CardMedia>
-                              <CardContent>
-                                  <Typography>Fields</Typography>
-                                  <Divider/>
-                                  <Typography>150</Typography>
-                              </CardContent>
-                          </Card>
-                      </Grid>
-                      <Grid xs={1}></Grid>
                       <Grid item xs={10} style={{alignItems: 'center'}}>
+                          <Paper style={{padding: 5}}>
                           <Map
                               style="mapbox://styles/mapbox/light-v10" // eslint-disable-line
                               center = {[69.240562, 41.311081]}
                               containerStyle={{
-                                  height: "400px",
+                                  height: "450px",
                                   width: "800px"
                               }}
                           >
                               <DrawControl onDrawCreate={this.onDrawCreate} onDrawUpdate={this.onDrawUpdate} />
                           </Map>
+                          </Paper>
                       </Grid>
                       <Grid xs={1}></Grid>
                   </Grid>
@@ -147,25 +125,47 @@ class Tenants extends Component<Props, State> {
               <Grid xs={12}>
               <Divider/>
               </Grid>
-              <Grid xs={12} style={{display:'flex', justifyContent:'center', alignItems:'center', paddingTop: 25}}>
-                  <Button style={{width: 250}} variant="outlined">+ Add New Tenant</Button>
+              <Grid xs={6} style={{display:'flex', justifyContent:'right', alignItems:'center', paddingTop: 25, paddingRight: 5}}>
+                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>+ Add New Tenant</Button>
               </Grid>
-              <Grid xs={12}>
-                  <Dialog open={false}>
-                      <DialogTitle>Add new Country (Tenant)</DialogTitle>
-                  </Dialog>
+              <Grid xs={6} style={{display:'flex', justifyContent:'left', alignItems:'center', paddingTop: 25, paddingLeft: 5}}>
+                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>+ Add Tenant Name</Button>
+              </Grid>
+              <Dialog open={isDialogOpen} maxWidth="xs">
+                  <DialogTitle>Add New Country</DialogTitle>
                   <DialogContent>
-                      <DialogContentText>
-                          You can set my maximum width and whether to adapt or not.
-                      </DialogContentText>
-                      <Button>OK</Button>
+                      <Grid container spacing={2}>
+                          <Grid item xs={12}>
+                              <TextField
+                                  label="Country Name"
+                                  fullWidth
+                                  variant="standard"/>
+                          </Grid>
+                          <Grid item xs={12}>
+                              <TextField
+                                  label="Country Code"
+                                  fullWidth
+                                  variant="standard"/>
+                          </Grid>
+                          <Grid item xs={12}>
+                              <TextField
+                                  label="Capital"
+                                  fullWidth
+                                  variant="standard"/>
+                          </Grid>
+                          <Grid item xs={12}>
+                              <TextField
+                                  label="Capital location[long:lat]"
+                                  fullWidth
+                                  variant="standard"/>
+                          </Grid>
+                      </Grid>
                   </DialogContent>
                   <DialogActions>
-                      <Button>Close</Button>
-                      <Button>Close</Button>
-
+                      <Button onClick={() => {this.onClickSave()}}>Save</Button>
+                      <Button onClick={() => {this.onClickCancel()}}>Cancel</Button>
                   </DialogActions>
-              </Grid>
+              </Dialog>
           </Grid>
         );
     }
