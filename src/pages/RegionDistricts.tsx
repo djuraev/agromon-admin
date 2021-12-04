@@ -71,7 +71,6 @@ class RegionDistricts extends Component<Props, State> {
                             <Grid item xs={3}>
                                 <Button style={{width: 200}} variant="outlined">+ Add District</Button>
                             </Grid>
-
                             <Grid item xs={3}>
                                 <Button style={{width: 200, paddingLeft: 20}} variant="outlined">+ Add District Name</Button>
                             </Grid>

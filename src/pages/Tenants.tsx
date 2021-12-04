@@ -1,20 +1,15 @@
 import React, {Component} from 'react';
 import {
-    Button,
-    Card,
-    CardContent, CardMedia, Dialog, DialogActions, DialogTitle, Divider,
-    Grid, Paper, TextField,
-    Typography
+    Dialog, DialogActions, DialogTitle, TextField,
+    Grid, Paper, Divider, Button,
 } from '@mui/material';
 import TenantDto from '../data-model/TenantDto';
 import {mainServer, tenant} from '../config/mainConfig';
 import axios from 'axios';
 import TenantsTable from '../comp/TenantsTable';
-import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import DrawControl from 'react-mapbox-gl-draw';
 import ReactMapboxGl from "react-mapbox-gl";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import DialogContent from '@mui/material/DialogContent';
 
 const Map = ReactMapboxGl({
