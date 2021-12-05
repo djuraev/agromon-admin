@@ -1,3 +1,5 @@
+import Name from './Name';
+
 class TenantDto {
     id: number;
     country: string;
@@ -15,15 +17,5 @@ class TenantDto {
         this.names.push(name);
     }
 
-}
-
-class Name {
-    langCode: string;
-    name: string;
-
-    constructor(langCode: string, name: string) {
-        this.langCode = langCode;
-        this.name = name;
-    }
 }
 export default TenantDto;

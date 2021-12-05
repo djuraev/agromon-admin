@@ -3,7 +3,7 @@ import {
     Button, Dialog, DialogActions, DialogTitle, Divider, FormControl,
     Grid, InputLabel, MenuItem,
     Paper,
-    Select,
+    Select, SelectChangeEvent,
     Table,
     TableBody, TableCell,
     TableContainer,
@@ -14,6 +14,12 @@ import {
 import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import DialogContent from '@mui/material/DialogContent';
+import {districts, mainServer, regions, tenant, villages} from '../config/mainConfig';
+import axios from 'axios';
+import TenantDto from '../data-model/TenantDto';
+import RegionDto from '../data-model/RegionDto';
+import DistrictDto from '../data-model/DistrictDto';
+import VillageDto from '../data-model/VillageDto';
 
 interface Props {
 
@@ -23,6 +29,14 @@ interface State {
     rowsPerPage: number;
     page: number;
     isAddUserDialogOpen: boolean;
+    tenants: TenantDto[];
+    selectedTenant: string,
+    regions: RegionDto[],
+    selectedRegionId: string;
+    districts: DistrictDto[];
+    selectedDistrictId: string;
+    villages: VillageDto[];
+    selectedVillageId: string;
 }
 
 class Users extends Component<Props, State> {
@@ -33,7 +47,19 @@ class Users extends Component<Props, State> {
             rowsPerPage: 10,
             page: 0,
             isAddUserDialogOpen: false,
+            tenants: [],
+            selectedTenant: '',
+            regions: [],
+            selectedRegionId: '',
+            districts: [],
+            selectedDistrictId: '',
+            villages: [],
+            selectedVillageId: '',
         };
+    }
+
+    componentDidMount() {
+        this.getTenants();
     }
 
     setAddUserDialog(isOpen: boolean) {
@@ -61,8 +87,107 @@ class Users extends Component<Props, State> {
         this.setState({rowsPerPage: perPage, page: 0});
     }
 
+    getTenantRegions(tenantCode: string) {
+        const url = mainServer + regions+"/"+tenantCode;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({regions: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getRegionDistricts(regionId: string | number) {
+        const url = mainServer + districts+"/"+regionId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({districts: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getDistrictVillages(districtId: string | number) {
+        const url = mainServer + villages+"/" + districtId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({villages: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getTenants() {
+        const url = mainServer + tenant + "/tenants";
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({tenants: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    handleTenantSelectChange(event: SelectChangeEvent) {
+        this.setState({selectedTenant: event.target.value, });
+        this.getTenantRegions(event.target.value);
+    }
+
+    handleRegionSelectChange(event: SelectChangeEvent) {
+        const regionId = event.target.value;
+        this.setState({selectedRegionId: regionId});
+        this.getRegionDistricts(regionId);
+    }
+
+    handleDistrictSelectChange(event: SelectChangeEvent) {
+        const districtId = event.target.value;
+        this.setState({selectedDistrictId: districtId});
+        this.getDistrictVillages(districtId);
+    }
+
+    handleVillageSelectChange(event: SelectChangeEvent) {
+        const villageId = event.target.value;
+        this.setState({selectedVillageId: villageId});
+    }
+
     render() {
-        const {rowsPerPage, page} = this.state;
+        const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
+                districts, selectedDistrictId, villages, selectedVillageId} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -74,11 +199,13 @@ class Users extends Component<Props, State> {
                                 <Select
                                     labelId="countrySelectLabel"
                                     id="countrySelect"
+                                    value={selectedTenant}
                                     label="Country"
+                                    onChange={(event) => {this.handleTenantSelectChange(event)}}
                                 >
-                                    <MenuItem value={10}>Uzbekistan</MenuItem>
-                                    <MenuItem value={20}>Kazakstan</MenuItem>
-                                    <MenuItem value={30}>Thirty</MenuItem>
+                                    {tenants.map((tenant) => (
+                                        <MenuItem value={tenant.code}>{tenant.country}</MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -89,10 +216,17 @@ class Users extends Component<Props, State> {
                                     labelId="regionSelectLabel"
                                     id="regionSelect"
                                     label="Region"
+                                    value={selectedRegionId}
+                                    onChange={(e) => {this.handleRegionSelectChange(e)}}
                                 >
-                                    <MenuItem value={10}>Uzbekistan</MenuItem>
-                                    <MenuItem value={20}>Kazakstan</MenuItem>
-                                    <MenuItem value={30}>Thirty</MenuItem>
+                                    {
+                                        regions ?
+                                        regions.map((region) => (
+                                          <MenuItem value={region.sequence.toLocaleString()}>{region.name}</MenuItem>
+                                        ))
+                                            :
+                                            <MenuItem>No Regions</MenuItem>
+                                    }
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -105,10 +239,12 @@ class Users extends Component<Props, State> {
                                     labelId="districtSelectLabel"
                                     id="districtSelect"
                                     label="District"
+                                    value={selectedDistrictId}
+                                    onChange={(e) => {this.handleDistrictSelectChange(e)}}
                                 >
-                                    <MenuItem value={10}>Uzbekistan</MenuItem>
-                                    <MenuItem value={20}>Kazakstan</MenuItem>
-                                    <MenuItem value={30}>Thirty</MenuItem>
+                                    {districts.map((district) => (
+                                        <MenuItem value={district.sequence.toLocaleString()}>{district.name}</MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -120,10 +256,12 @@ class Users extends Component<Props, State> {
                                     labelId="villageSelectLabel"
                                     id="villageSelect"
                                     label="Village"
+                                    value={selectedVillageId}
+                                    onChange={(e) => {this.handleVillageSelectChange(e)}}
                                 >
-                                    <MenuItem value={10}>Uzbekistan</MenuItem>
-                                    <MenuItem value={20}>Kazakstan</MenuItem>
-                                    <MenuItem value={30}>Thirty</MenuItem>
+                                    {villages.map((village) => (
+                                        <MenuItem value={village.sequence.toLocaleString()}>{village.name}</MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
