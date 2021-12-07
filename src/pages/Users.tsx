@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, PointerEventHandler} from 'react';
 import {
     Button, Dialog, DialogActions, DialogTitle, Divider, FormControl,
     Grid, InputLabel, MenuItem,
@@ -29,6 +29,7 @@ interface State {
     rowsPerPage: number;
     page: number;
     isAddUserDialogOpen: boolean;
+    //
     tenants: TenantDto[];
     selectedTenant: string,
     regions: RegionDto[],
@@ -37,6 +38,21 @@ interface State {
     selectedDistrictId: string;
     villages: VillageDto[];
     selectedVillageId: string;
+    //for add
+    tenantsModal: TenantDto[];
+    selectedTenantModal: string;
+    regionsModal: RegionDto[];
+    selectedRegionIdModal: string;
+    districtsModal: DistrictDto[];
+    selectedDistrictModal: string;
+    villagesModal: VillageDto[];
+    selectedVillageIdModal: string;
+    //
+    surname: string;
+    name: string;
+    insuNumber: string;
+    email: string;
+    password: string;
 }
 
 class Users extends Component<Props, State> {
@@ -55,6 +71,19 @@ class Users extends Component<Props, State> {
             selectedDistrictId: '',
             villages: [],
             selectedVillageId: '',
+            tenantsModal: [],
+            selectedTenantModal: '',
+            regionsModal: [],
+            selectedRegionIdModal: '',
+            districtsModal: [],
+            selectedDistrictModal: '',
+            villagesModal: [],
+            selectedVillageIdModal: '',
+            surname: '',
+            name: '',
+            insuNumber: '',
+            email: '',
+            password: '',
         };
     }
 
@@ -67,6 +96,7 @@ class Users extends Component<Props, State> {
     }
 
     onAddNewUserClick() {
+        //this.getTenants();
         this.setAddUserDialog(true);
     }
 
@@ -87,7 +117,7 @@ class Users extends Component<Props, State> {
         this.setState({rowsPerPage: perPage, page: 0});
     }
 
-    getTenantRegions(tenantCode: string) {
+    getTenantRegions(tenantCode: string, isModal: boolean) {
         const url = mainServer + regions+"/"+tenantCode;
         axios({
             url: url,
@@ -96,7 +126,10 @@ class Users extends Component<Props, State> {
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({regions: response.data.entities[0]});
+                    if (isModal)
+                        this.setState({regionsModal: response.data.entities[0]});
+                    else
+                        this.setState({regions: response.data.entities[0]});
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -106,7 +139,7 @@ class Users extends Component<Props, State> {
             });
     }
 
-    getRegionDistricts(regionId: string | number) {
+    getRegionDistricts(regionId: string | number, isModal: boolean) {
         const url = mainServer + districts+"/"+regionId;
         axios({
             url: url,
@@ -115,7 +148,12 @@ class Users extends Component<Props, State> {
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({districts: response.data.entities[0]});
+                    if (isModal) {
+                        this.setState({districtsModal: response.data.entities[0]});
+                    }
+                    else {
+                        this.setState({districts: response.data.entities[0]});
+                    }
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -125,7 +163,7 @@ class Users extends Component<Props, State> {
             });
     }
 
-    getDistrictVillages(districtId: string | number) {
+    getDistrictVillages(districtId: string | number, isModal: boolean) {
         const url = mainServer + villages+"/" + districtId;
         axios({
             url: url,
@@ -134,7 +172,12 @@ class Users extends Component<Props, State> {
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({villages: response.data.entities[0]});
+                    if (isModal) {
+                        this.setState({villagesModal: response.data.entities[0]});
+                    }
+                    else {
+                        this.setState({villages: response.data.entities[0]});
+                    }
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -154,6 +197,7 @@ class Users extends Component<Props, State> {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
                     this.setState({tenants: response.data.entities[0]});
+                    this.setState({tenantsModal: response.data.entities[0]});
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -164,20 +208,21 @@ class Users extends Component<Props, State> {
     }
 
     handleTenantSelectChange(event: SelectChangeEvent) {
-        this.setState({selectedTenant: event.target.value, });
-        this.getTenantRegions(event.target.value);
+        this.setState({selectedTenant: event.target.value, selectedRegionId: '', selectedDistrictId: '',
+                             selectedVillageId: '', districts: [], villages: []});
+        this.getTenantRegions(event.target.value, false);
     }
 
     handleRegionSelectChange(event: SelectChangeEvent) {
         const regionId = event.target.value;
         this.setState({selectedRegionId: regionId});
-        this.getRegionDistricts(regionId);
+        this.getRegionDistricts(regionId, false);
     }
 
     handleDistrictSelectChange(event: SelectChangeEvent) {
         const districtId = event.target.value;
         this.setState({selectedDistrictId: districtId});
-        this.getDistrictVillages(districtId);
+        this.getDistrictVillages(districtId, false);
     }
 
     handleVillageSelectChange(event: SelectChangeEvent) {
@@ -185,9 +230,42 @@ class Users extends Component<Props, State> {
         this.setState({selectedVillageId: villageId});
     }
 
+    handleTenantSelectChangeModal(event: SelectChangeEvent) {
+        this.setState({selectedTenantModal: event.target.value, selectedRegionIdModal: '', selectedVillageIdModal: '',
+                             selectedVillageId: '', districtsModal: [], villagesModal: []});
+        this.getTenantRegions(event.target.value, true);
+    }
+
+    handleDistrictSelectChangeModal(event: SelectChangeEvent) {
+        const districtId = event.target.value;
+        this.setState({selectedDistrictModal: districtId});
+        this.getDistrictVillages(districtId, true);
+    }
+
+    handleVillageSelectChangeModal(event: SelectChangeEvent) {
+        const villageId = event.target.value;
+        this.setState({selectedVillageIdModal: villageId});
+    }
+
+    handleRegionSelectChangeModal(event: SelectChangeEvent) {
+        const regionId = event.target.value;
+        this.setState({selectedRegionId: regionId});
+        this.getRegionDistricts(regionId, true);
+    }
+
+    onSurnamePointerLeave(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+       const surname = event.target.value;
+       this.setState({surname: surname});
+       alert(surname);
+    }
+
     render() {
         const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
-                districts, selectedDistrictId, villages, selectedVillageId} = this.state;
+                districts, selectedDistrictId, villages, selectedVillageId,
+                tenantsModal, regionsModal, districtsModal, villagesModal,
+                selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal } = this.state;
+
+        const {surname, name, email, insuNumber, password} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -334,12 +412,14 @@ class Users extends Component<Props, State> {
                                     <InputLabel id="countrySelectLabel">Country</InputLabel>
                                     <Select
                                         labelId="countrySelectLabel"
-                                        id="countrySelect"
+                                        id="countrySelectModal"
+                                        value={selectedTenantModal}
                                         label="Country"
+                                        onChange={(event) => {this.handleTenantSelectChangeModal(event)}}
                                     >
-                                        <MenuItem value={10}>Uzbekistan</MenuItem>
-                                        <MenuItem value={20}>Kazakstan</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                        {tenantsModal.map((tenant) => (
+                                            <MenuItem value={tenant.code}>{tenant.country}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -348,12 +428,19 @@ class Users extends Component<Props, State> {
                                     <InputLabel id="regionSelectLabel">Region</InputLabel>
                                     <Select
                                         labelId="regionSelectLabel"
-                                        id="regionSelect"
+                                        id="regionSelectModal"
                                         label="Region"
+                                        value={selectedRegionIdModal}
+                                        onChange={(e) => {this.handleRegionSelectChangeModal(e)}}
                                     >
-                                        <MenuItem value={10}>Uzbekistan</MenuItem>
-                                        <MenuItem value={20}>Kazakstan</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                        {
+                                            regionsModal ?
+                                                regionsModal.map((region) => (
+                                                    <MenuItem value={region.sequence.toLocaleString()}>{region.name}</MenuItem>
+                                                ))
+                                                :
+                                                <MenuItem>No Regions</MenuItem>
+                                        }
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -362,12 +449,14 @@ class Users extends Component<Props, State> {
                                     <InputLabel id="districtSelectLabel">District</InputLabel>
                                     <Select
                                         labelId="districtSelectLabel"
-                                        id="districtSelect"
+                                        id="districtSelectModal"
                                         label="District"
+                                        value={selectedDistrictModal}
+                                        onChange={(e) => {this.handleDistrictSelectChangeModal(e)}}
                                     >
-                                        <MenuItem value={10}>Uzbekistan</MenuItem>
-                                        <MenuItem value={20}>Kazakstan</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                        {districtsModal.map((district) => (
+                                            <MenuItem value={district.sequence.toLocaleString()}>{district.name}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -376,12 +465,14 @@ class Users extends Component<Props, State> {
                                     <InputLabel id="districtSelectLabel">Village</InputLabel>
                                     <Select
                                         labelId="villageSelectLabel"
-                                        id="villageSelect"
+                                        id="villageSelectModal"
                                         label="Village"
+                                        value={selectedVillageIdModal}
+                                        onChange={(e) => {this.handleVillageSelectChangeModal(e)}}
                                     >
-                                        <MenuItem value={10}>Uzbekistan</MenuItem>
-                                        <MenuItem value={20}>Kazakstan</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                        {villagesModal.map((village) => (
+                                            <MenuItem value={village.sequence.toLocaleString()}>{village.name}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -389,7 +480,9 @@ class Users extends Component<Props, State> {
                                 <TextField
                                     label="Surname"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={this.state.surname}
+                                    onChange={(e) => {this.onSurnamePointerLeave(e)}}/>
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
