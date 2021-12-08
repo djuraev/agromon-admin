@@ -53,6 +53,7 @@ interface State {
     insuNumber: string;
     email: string;
     password: string;
+    rePassword: string;
 }
 
 class Users extends Component<Props, State> {
@@ -84,6 +85,7 @@ class Users extends Component<Props, State> {
             insuNumber: '',
             email: '',
             password: '',
+            rePassword: '',
         };
     }
 
@@ -101,7 +103,27 @@ class Users extends Component<Props, State> {
     }
 
     onClickAddUserDialogSave() {
-        this.setAddUserDialog(false);
+        const {surname, name, email, insuNumber, password, rePassword} = this.state;
+        const { selectedTenantModal, selectedRegionIdModal, selectedDistrictModal, selectedVillageIdModal } = this.state;
+
+        const userInfo = {
+            'tenantId': selectedTenantModal,
+            'regionSequence': parseInt(selectedRegionIdModal),
+            'districtSequence': parseInt(selectedDistrictModal),
+            'villageSequence': parseInt(selectedVillageIdModal),
+            'insuranceNumber': parseInt(insuNumber),
+            'surname': surname,
+            'name': name,
+            'email': email,
+            'password': password,
+            'roles': ['USER']
+        };
+        if (password !== rePassword) {
+            alert('Password do not match. Please, check password.');
+            return;
+        }
+        alert(JSON.stringify(userInfo));
+        //this.setAddUserDialog(false);
     }
 
     onClickAddUserDialogCancel() {
@@ -249,14 +271,32 @@ class Users extends Component<Props, State> {
 
     handleRegionSelectChangeModal(event: SelectChangeEvent) {
         const regionId = event.target.value;
-        this.setState({selectedRegionId: regionId});
+        this.setState({selectedRegionIdModal: regionId});
         this.getRegionDistricts(regionId, true);
     }
 
-    onSurnamePointerLeave(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-       const surname = event.target.value;
-       this.setState({surname: surname});
-       alert(surname);
+    onChangeSurname(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+       this.setState({surname: event.target.value});
+    }
+
+    onChangeName(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({name: event.target.value});
+    }
+
+    onChangeEmail(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({email: event.target.value});
+    }
+
+    onChangeInsuNumber(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({insuNumber: event.target.value});
+    }
+
+    onChangePassword(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({password: event.target.value});
+    }
+
+    onChangeRePassword(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({rePassword: event.target.value});
     }
 
     render() {
@@ -265,7 +305,7 @@ class Users extends Component<Props, State> {
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal } = this.state;
 
-        const {surname, name, email, insuNumber, password} = this.state;
+        const {surname, name, email, insuNumber, password, rePassword} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -481,38 +521,54 @@ class Users extends Component<Props, State> {
                                     label="Surname"
                                     fullWidth
                                     variant="standard"
-                                    value={this.state.surname}
-                                    onChange={(e) => {this.onSurnamePointerLeave(e)}}/>
+                                    value={surname}
+                                    onChange={(e) => {this.onChangeSurname(e)}}/>
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
                                     label="Name"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={name}
+                                    onChange={(e) => {this.onChangeName(e)}}
+                                />
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
                                     label="Insurance Number"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={insuNumber}
+                                    onChange={(e) => {this.onChangeInsuNumber(e)}}
+                                />
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
                                     label="Email"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={email}
+                                    onChange={(e) => {this.onChangeEmail(e)}}
+                                />
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
                                     label="Password"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={password}
+                                    type="password"
+                                    onChange={(e) => {this.onChangePassword(e)}}
+                                />
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
                                     label="Retype Password"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    value={rePassword}
+                                    type="password"
+                                    onChange={(e) => {this.onChangeRePassword(e)}}/>
                             </Grid>
                         </Grid>
                     </DialogContent>
