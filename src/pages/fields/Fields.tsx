@@ -11,8 +11,8 @@ import {
     Grid, IconButton,
     Input,
     InputAdornment,
-    InputLabel,
-    Paper, TextareaAutosize,
+    InputLabel, MenuItem,
+    Paper, Select, SelectChangeEvent, TextareaAutosize,
     TextField, Typography
 } from '@mui/material';
 import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
@@ -24,6 +24,11 @@ import AccountBoxOutlinedIcon from '@mui/icons-material/AccountBoxOutlined';
 import BackspaceSharpIcon from '@mui/icons-material/BackspaceSharp';
 import SaveSharpIcon from '@mui/icons-material/SaveSharp';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
+import UserDto from '../../data-model/UserDto';
+import axios from 'axios';
+import {crops, mainServer, user, villages} from '../../config/mainConfig';
+import CropDto from '../../data-model/CropDto';
+import VillageDto from '../../data-model/VillageDto';
 
 
 interface Props {
@@ -37,6 +42,12 @@ interface State {
     zoom: number;
     coordinates: string,
     rawCoordinates: any;
+    currentUser: UserDto;
+    currentInsuNumber: string;
+    crops: CropDto[];
+    selectedCrop: string,
+    villages: VillageDto[],
+    selectedVillage: string,
 }
 
 const Map = ReactMapboxGl({
@@ -53,10 +64,17 @@ class Fields extends Component<Props, State> {
         zoom: 16,
         coordinates: '',
         rawCoordinates: null,
+        currentUser: UserDto.of(),
+        currentInsuNumber: '',
+        crops: [],
+        selectedCrop: '',
+        villages: [],
+        selectedVillage: '',
     }
 
     componentDidMount() {
         this.getCurrentLocation();
+        this.getAllCrops();
     }
 
     onDrawCreate(points: any){
@@ -119,8 +137,79 @@ class Fields extends Component<Props, State> {
         }
     }
 
+    getUserInfo(insuNumber: string) {
+        const url = mainServer + user + "/"+insuNumber;
+        axios.get(url)
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({currentUser: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getAllCrops() {
+        const url = mainServer + crops;
+        axios.get(url)
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({crops: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    onInsuNumbChanged(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({currentInsuNumber: event.target.value});
+    }
+
+    onClickSearchButton() {
+        const {currentInsuNumber} = this.state;
+        this.getUserInfo(currentInsuNumber);
+    }
+
+    handleOnCropChange(event: SelectChangeEvent) {
+        const cropId = event.target.value;
+        this.setState({selectedCrop: cropId});
+        this.getDistrictVillages(this.state.currentUser.districtSequence);
+    }
+
+    handleOnVillageChange(event: SelectChangeEvent) {
+        const villageId = event.target.value;
+        this.setState({selectedVillage: villageId});
+    }
+
+    getDistrictVillages(districtId: number) {
+        const url = mainServer + villages+"/" + districtId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({villages: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     render() {
-        const {mapViewStyle, currentLang, currentLat, zoom} = this.state;
+        const {mapViewStyle, currentLang, currentLat, zoom, currentUser, crops, selectedCrop, villages, selectedVillage } = this.state;
         return (
             <Grid container>
                     <Grid item xs={6}>
@@ -139,11 +228,12 @@ class Fields extends Component<Props, State> {
                                                     <AccountBoxOutlinedIcon />
                                                 </InputAdornment>
                                             }
+                                            onChange={(event => {this.onInsuNumbChanged(event)})}
                                         />
                                     </FormControl>
                                 </Grid>
                                 <Grid item xs={2}>
-                                    <Button variant="outlined" style={{height: 50}}>
+                                    <Button variant="outlined" style={{height: 50}} onClick={() => {this.onClickSearchButton()}}>
                                         <LocationSearchingSharpIcon/>
                                         &nbsp;&nbsp;Search
                                     </Button>
@@ -157,22 +247,22 @@ class Fields extends Component<Props, State> {
                                 <Grid item xs={8}>
                                     <Grid container spacing={2}>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Name" disabled={true}/>
+                                            <TextField size="small" label="Name" value={currentUser.name}/>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Surname"/>
+                                            <TextField size="small" label="Surname" value={currentUser.surname}/>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Insurance Number"/>
+                                            <TextField size="small" label="Insurance Number" value={currentUser.insuranceNumber}/>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Email"/>
+                                            <TextField size="small" label="Email" value={currentUser.email}/>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Region"/>
+                                            <TextField size="small" label="Region" value={currentUser.regionSequence}/>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="District"/>
+                                            <TextField size="small" label="District" value={currentUser.districtSequence}/>
                                         </Grid>
                                     </Grid>
                                 </Grid>
@@ -187,11 +277,38 @@ class Fields extends Component<Props, State> {
                                 <Grid item xs={1}/>
                                 <Grid item xs={8}>
                                     <Grid container spacing={2}>
-                                        <Grid item xs={6}>
-                                            <TextField size="small" label="Village"/>
+                                        <Grid item xs={5}>
+                                            <FormControl fullWidth size={'small'}>
+                                                <InputLabel id="cropSelectLabel">Crop</InputLabel>
+                                                <Select
+                                                    labelId="cropSelectLabel"
+                                                    id="cropSelect"
+                                                    value={selectedCrop}
+                                                    label="Crop"
+                                                    onChange={(event) => {this.handleOnCropChange(event)}}
+                                                >
+                                                    {crops.map((crop) => (
+                                                        <MenuItem value={crop.sequence}>{crop.name}</MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
                                         </Grid>
-                                        <Grid item xs={6}>
-                                            <TextField size="small" label="Crop Type"/>
+                                        <Grid item xs={1}/>
+                                        <Grid item xs={5}>
+                                            <FormControl fullWidth size={'small'}>
+                                                <InputLabel id="villageSelectLabel">Village</InputLabel>
+                                                <Select
+                                                    labelId="villageSelectLabel"
+                                                    id="villageSelect"
+                                                    value={selectedVillage}
+                                                    label="Village"
+                                                    onChange={(event) => {this.handleOnVillageChange(event)}}
+                                                >
+                                                    {villages.map((village) => (
+                                                        <MenuItem value={village.sequence}>{village.name}</MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
                                         </Grid>
                                         <Grid item xs={6}>
                                             <TextField size="small" label="Field Name"/>

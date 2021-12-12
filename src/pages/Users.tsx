@@ -3,7 +3,7 @@ import {
     Button, Dialog, DialogActions, DialogTitle, Divider, FormControl,
     Grid, InputLabel, MenuItem,
     Paper,
-    Select, SelectChangeEvent,
+    Select, SelectChangeEvent, Stack,
     Table,
     TableBody, TableCell,
     TableContainer,
@@ -13,13 +13,19 @@ import {
 } from '@mui/material';
 import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
-import DialogContent from '@mui/material/DialogContent';
-import {districts, mainServer, regions, tenant, villages} from '../config/mainConfig';
+import InfoIcon from '@mui/icons-material/Info';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
+import AddCardIcon from '@mui/icons-material/AddCard';
+import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import axios from 'axios';
+import DialogContent from '@mui/material/DialogContent';
+import {districts, mainServer, regions, tenant, user, users, villages} from '../config/mainConfig';
 import TenantDto from '../data-model/TenantDto';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
 import VillageDto from '../data-model/VillageDto';
+import UserDto from '../data-model/UserDto';
 
 interface Props {
 
@@ -54,6 +60,8 @@ interface State {
     email: string;
     password: string;
     rePassword: string;
+    //
+    users: UserDto[];
 }
 
 class Users extends Component<Props, State> {
@@ -86,6 +94,7 @@ class Users extends Component<Props, State> {
             email: '',
             password: '',
             rePassword: '',
+            users: [],
         };
     }
 
@@ -102,7 +111,7 @@ class Users extends Component<Props, State> {
         this.setAddUserDialog(true);
     }
 
-    onClickAddUserDialogSave() {
+    async onClickAddUserDialogSave() {
         const {surname, name, email, insuNumber, password, rePassword} = this.state;
         const { selectedTenantModal, selectedRegionIdModal, selectedDistrictModal, selectedVillageIdModal } = this.state;
 
@@ -122,8 +131,17 @@ class Users extends Component<Props, State> {
             alert('Password do not match. Please, check password.');
             return;
         }
-        alert(JSON.stringify(userInfo));
-        //this.setAddUserDialog(false);
+        const url = mainServer + user;
+        axios.post(url, userInfo)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage);
+                }
+                else {
+                    alert("User successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
     }
 
     onClickAddUserDialogCancel() {
@@ -229,6 +247,25 @@ class Users extends Component<Props, State> {
             });
     }
 
+    getUsers() {
+        const url = mainServer + users;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({users: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     handleTenantSelectChange(event: SelectChangeEvent) {
         this.setState({selectedTenant: event.target.value, selectedRegionId: '', selectedDistrictId: '',
                              selectedVillageId: '', districts: [], villages: []});
@@ -279,6 +316,10 @@ class Users extends Component<Props, State> {
        this.setState({surname: event.target.value});
     }
 
+    onClickSearchButton() {
+        this.getUsers();
+    }
+
     onChangeName(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({name: event.target.value});
     }
@@ -305,7 +346,7 @@ class Users extends Component<Props, State> {
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal } = this.state;
 
-        const {surname, name, email, insuNumber, password, rePassword} = this.state;
+        const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -322,7 +363,7 @@ class Users extends Component<Props, State> {
                                     onChange={(event) => {this.handleTenantSelectChange(event)}}
                                 >
                                     {tenants.map((tenant) => (
-                                        <MenuItem value={tenant.code}>{tenant.country}</MenuItem>
+                                        <MenuItem value={tenant.id}>{tenant.country}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
@@ -384,7 +425,7 @@ class Users extends Component<Props, State> {
                             </FormControl>
                         </Grid>
                         <Grid item xs={1}>
-                            <Button variant="outlined" >
+                            <Button variant="outlined" onClick={() => {this.onClickSearchButton()}} >
                                 <LocationSearchingSharpIcon/>
                                 &nbsp;&nbsp;Search
                             </Button>
@@ -396,14 +437,44 @@ class Users extends Component<Props, State> {
                         <Table aria-label="custom pagination table">
                             <TableHead style={{backgroundColor: 'whitesmoke'}}>
                                 <TableRow>
+                                    <TableCell align="center">N</TableCell>
                                     <TableCell align="center">Surname</TableCell>
                                     <TableCell align="center">Name</TableCell>
                                     <TableCell align="center">Insurance Number</TableCell>
                                     <TableCell align="center">Email</TableCell>
+                                    <TableCell align="center">Country</TableCell>
                                     <TableCell align="center">Operations</TableCell>
                                 </TableRow>
                             </TableHead>
-                            <TableBody></TableBody>
+                            <TableBody>
+                                {users.map((usr, idx) => (
+
+                                    <TableRow
+                                        key={usr.sequence}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                    >
+                                        <TableCell component="th" scope="row" align="center" width="30">
+                                            {idx+1}
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" align="center">
+                                            {usr.surname}
+                                        </TableCell>
+                                        <TableCell align="center">{usr.name}</TableCell>
+                                        <TableCell align="center">{usr.insuranceNumber}</TableCell>
+                                        <TableCell align="center">{usr.email}</TableCell>
+                                        <TableCell align="center">{usr.tenantId}</TableCell>
+                                        <TableCell align="center">
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <Button value={usr.sequence}><InfoIcon/></Button>
+                                                <Button value={usr.sequence}><SatelliteAltIcon/></Button>
+                                                <Button value={usr.sequence}><AddCardIcon/></Button>
+                                                <Button value={usr.sequence}><AssistantDirectionIcon/></Button>
+                                                <Button value={usr.sequence}><DeleteIcon/></Button>
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
                             <TableFooter>
                                 <TableRow>
                                     <TablePagination
@@ -458,7 +529,7 @@ class Users extends Component<Props, State> {
                                         onChange={(event) => {this.handleTenantSelectChangeModal(event)}}
                                     >
                                         {tenantsModal.map((tenant) => (
-                                            <MenuItem value={tenant.code}>{tenant.country}</MenuItem>
+                                            <MenuItem value={tenant.id}>{tenant.country}</MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
@@ -573,7 +644,7 @@ class Users extends Component<Props, State> {
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => this.onClickAddUserDialogSave()}>Save</Button>
+                        <Button onClick={() => this.onClickAddUserDialogSave().then()}>Save</Button>
                         <Button onClick={() => this.onClickAddUserDialogCancel()}>Cancel</Button>
                     </DialogActions>
                 </Dialog>

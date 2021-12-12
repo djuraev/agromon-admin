@@ -1,6 +1,9 @@
 export const mainServer = "http://localhost:8090/api";
 export const devServer = "http://localhost:8090/api";
 export const tenant = "/tenant";
-export const regions = "/tenant/region/regions";
+export const regions = "/tenant/region/regions/id";
 export const districts = "/tenant/district/districts";
 export const villages = "/tenant/village/village";
+export const user = "/user/user";
+export const users = "/user/users";
+export const crops = "/crop/crops";
