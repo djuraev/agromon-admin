@@ -8,7 +8,7 @@ import {
     ButtonGroup,
     Divider,
     FormControl,
-    Grid, IconButton,
+    Grid,
     Input,
     InputAdornment,
     InputLabel, MenuItem,
@@ -48,6 +48,10 @@ interface State {
     selectedCrop: string,
     villages: VillageDto[],
     selectedVillage: string,
+    fieldName: string;
+    fieldArea: string;
+    fieldComment: string;
+    fieldPolygon: string;
 }
 
 const Map = ReactMapboxGl({
@@ -57,19 +61,26 @@ const Map = ReactMapboxGl({
 
 class Fields extends Component<Props, State> {
     //
-    state: State = {
-        mapViewStyle: "mapbox://styles/mapbox/satellite-v9",
-        currentLang: null,
-        currentLat: null,
-        zoom: 16,
-        coordinates: '',
-        rawCoordinates: null,
-        currentUser: UserDto.of(),
-        currentInsuNumber: '',
-        crops: [],
-        selectedCrop: '',
-        villages: [],
-        selectedVillage: '',
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            mapViewStyle: "mapbox://styles/mapbox/satellite-v9",
+            currentLang: null,
+            currentLat: null,
+            zoom: 16,
+            coordinates: '',
+            rawCoordinates: null,
+            currentUser: UserDto.of(),
+            currentInsuNumber: '',
+            crops: [],
+            selectedCrop: '',
+            villages: [],
+            selectedVillage: '',
+            fieldName: '',
+            fieldArea: '',
+            fieldComment: '',
+            fieldPolygon: '',
+        }
     }
 
     componentDidMount() {
@@ -208,8 +219,42 @@ class Fields extends Component<Props, State> {
             });
     }
 
+    onChangeFieldName(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({fieldName: event.target.value});
+    }
+
+    onChangeFieldArea(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({fieldArea: event.target.value});
+    }
+
+    onChangeFieldComment(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({fieldComment: event.target.value});
+    }
+
+    onChangeFieldPolygon(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({fieldPolygon: event.target.value});
+    }
+
+    onClickSaveButton() {
+        const {selectedCrop, selectedVillage, fieldComment, fieldArea, fieldName, fieldPolygon, currentUser} = this.state;
+        const userField = {
+            "tenantId": currentUser.tenantId,
+            "username": currentUser.insuranceNumber,
+            "villageSequence": currentUser.villageSequence,
+            "villageName": selectedVillage,
+            "name": fieldName,
+            "polygon": fieldPolygon,
+            "cropId": selectedCrop,
+            "cropName": selectedCrop,
+            "comment": fieldComment,
+            "userArea": fieldArea
+        };
+        alert(JSON.stringify(userField));
+    }
+
     render() {
-        const {mapViewStyle, currentLang, currentLat, zoom, currentUser, crops, selectedCrop, villages, selectedVillage } = this.state;
+        const {mapViewStyle, currentLang, currentLat, zoom, currentUser, crops, selectedCrop, villages, selectedVillage,
+               fieldName, fieldArea, fieldComment, fieldPolygon} = this.state;
         return (
             <Grid container>
                     <Grid item xs={6}>
@@ -311,24 +356,42 @@ class Fields extends Component<Props, State> {
                                             </FormControl>
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Field Name"/>
+                                            <TextField
+                                                size="small"
+                                                label="Field Name"
+                                                value={fieldName}
+                                                onChange={(e) => {this.onChangeFieldName(e)}}
+                                            />
                                         </Grid>
                                         <Grid item xs={6}>
-                                            <TextField size="small" label="Area (hectare)"/>
+                                            <TextField
+                                                size="small"
+                                                label="Area (hectare)"
+                                                value={fieldArea}
+                                                onChange={(e) => {this.onChangeFieldArea(e)}}
+                                            />
                                         </Grid>
                                         <Grid item xs={12}>
-                                            <TextField size="small" label="Comment" style={{width: '95%'}}/>
+                                            <TextField
+                                                size="small"
+                                                label="Comment"
+                                                style={{width: '95%'}}
+                                                value={fieldComment}
+                                                onChange={(e) => {this.onChangeFieldComment(e)}}
+                                            />
                                         </Grid>
                                         <Grid item xs={12}>
                                             <TextareaAutosize
                                                 style={{width: '95%', height: '20vh'}}
                                                 aria-label="maximum height"
                                                 id="coordinatesArea"
-                                                minRows={4}/>
+                                                minRows={4}
+                                                value={fieldPolygon}
+                                                onChange={(e) => {this.onChangeFieldPolygon(e)}}/>
                                         </Grid>
                                         <Grid item xs={3}/>
                                         <Grid item xs={3}>
-                                            <Button variant="outlined"><SaveSharpIcon/>&nbsp;&nbsp;Save</Button>
+                                            <Button variant="outlined" onClick={this.onClickSaveButton}><SaveSharpIcon/>&nbsp;&nbsp;Save</Button>
                                         </Grid>
                                         <Grid item xs={3} >
                                             <Button
