@@ -4,31 +4,40 @@ import {
     DialogTitle,
     Divider,
     FormControl,
-    FormHelperText,
     Grid, InputLabel,
     MenuItem,
     Paper,
-    Select, SelectChangeEvent,
+    Select, SelectChangeEvent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     TextField
 } from '@mui/material';
 import DialogContent from '@mui/material/DialogContent';
 import TenantDto from '../data-model/TenantDto';
-import {mainServer, regions, tenant} from '../config/mainConfig';
+import {districts, mainServer, newDistrict, newRegion, regions, tenant} from '../config/mainConfig';
 import axios from 'axios';
 import RegionDto from '../data-model/RegionDto';
+import DistrictDto from '../data-model/DistrictDto';
 
 interface Props {
 
 }
 
 interface State {
+    regions: RegionDto[];
+    countries: TenantDto[];
+    districts: DistrictDto[];
+    selectedCountry: string;
+    selectedRegion: string;
     tenantsModal1: TenantDto[];
     selectedTenantModal1: string;
     selectedTenantModal2: string;
     isAddNewRegionOpen: boolean;
     isAddNewDistrictOpen: boolean;
-    selectedRegionIdModal: '';
-    regionsModal: RegionDto[];
+    selectedRegionIdModal1: string;
+    selectedRegionIdModal2: string;
+    regionsModal1: RegionDto[];
+    regionsModal2: RegionDto[];
+    regionNameModal1: string;
+    addNewDistrictText: string;
 }
 class RegionDistricts extends Component<Props, State> {
     //
@@ -40,8 +49,17 @@ class RegionDistricts extends Component<Props, State> {
             selectedTenantModal2: '',
             isAddNewRegionOpen: false,
             isAddNewDistrictOpen: false,
-            selectedRegionIdModal: '',
-            regionsModal: []
+            selectedRegionIdModal1: '',
+            selectedRegionIdModal2: '',
+            regionsModal1: [],
+            regionsModal2: [],
+            regions: [],
+            countries: [],
+            selectedRegion: '',
+            selectedCountry: '',
+            districts: [],
+            regionNameModal1: '',
+            addNewDistrictText: '',
         };
     }
 
@@ -59,7 +77,32 @@ class RegionDistricts extends Component<Props, State> {
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({tenantsModal1: response.data.entities[0]});
+                    this.setState({tenantsModal1: response.data.entities[0], countries: response.data.entities[0]});
+
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getTenantRegions(tenantCode: string, isModal: string) {
+        const url = mainServer + regions+"/"+tenantCode;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    if (isModal === "modal1")
+                        this.setState({regionsModal1: response.data.entities[0]});
+                    else if (isModal === "modal2")
+                        this.setState({regionsModal2: response.data.entities[0]});
+                    else
+                        this.setState({regions: response.data.entities[0]});
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -73,45 +116,146 @@ class RegionDistricts extends Component<Props, State> {
         this.setState({selectedTenantModal1: event.target.value});
     }
 
+
     handleTenantSelectChangeModal2(event: SelectChangeEvent) {
-        this.setState({selectedTenantModal2: event.target.value});
+        const tenantId = event.target.value;
+        this.setState({selectedTenantModal2: tenantId});
+        this.getTenantRegions(tenantId, "modal2");
     }
 
     handleRegionSelectChangeModal(event: SelectChangeEvent) {
-       // this.setState({selectedRegionIdModal: event.target.value});
+        this.setState({selectedRegionIdModal2: event.target.value});
+    }
+
+    handleTenantSelectChange(event: SelectChangeEvent) {
+        this.setState({selectedCountry: event.target.value, selectedRegion: ''});
+        this.getTenantRegions(event.target.value, "main");
+    }
+
+    handleRegionSelectChange(event: SelectChangeEvent) {
+        const regionId = event.target.value;
+        this.setState({selectedRegion: regionId});
+        this.getRegionDistricts(regionId, false);
+    }
+
+    getRegionDistricts(regionId: string | number, isModal: boolean) {
+        const url = mainServer + districts+"/"+regionId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    if (isModal) {
+                        this.setState({districts: response.data.entities[0]});
+                    }
+                    else {
+                        this.setState({districts: response.data.entities[0]});
+                    }
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    addNewRegion() {
+        const {selectedTenantModal1, regionNameModal1 } = this.state;
+        const region = {
+            "tenantId": selectedTenantModal1,
+            "name": regionNameModal1,
+            "names": [],
+        };
+        let url = mainServer + newRegion;
+        axios.post(url, region)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+                else {
+                    alert("Region successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
+        this.setState({isAddNewRegionOpen: false});
+    }
+
+    onChangeNewRegionTextBox(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({regionNameModal1: event.target.value});
+    }
+
+    onChangeNewDistrictTextBox(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({addNewDistrictText: event.target.value});
+    }
+
+    addNewDistrict() {
+        const {selectedTenantModal2, selectedRegionIdModal2, addNewDistrictText} = this.state;
+        const district = {
+            "tenantId": selectedTenantModal2,
+            "regionSequence": selectedRegionIdModal2,
+            "name": addNewDistrictText,
+            "names": []
+        };
+        let url = mainServer + newDistrict;
+        axios.post(url, district)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+                else {
+                    alert("District successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
+        this.setState({isAddNewDistrictOpen: false});
     }
 
     render() {
-        const {selectedTenantModal1, tenantsModal1, selectedTenantModal2, regionsModal} = this.state;
+        const {selectedTenantModal1, tenantsModal1, selectedTenantModal2, regionsModal1, countries, regions, selectedRegion, selectedCountry,
+                districts, regionsModal2} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
                 <Grid item xs={1}/>
                 <Grid item xs={10}>
-                    <Paper style={{paddingTop: 10}}>
+                    <Paper style={{paddingTop: 10, paddingBottom: 10}}>
                         <Grid container spacing={2} style={{}}>
                             <Grid item xs={1}/>
                             <Grid item xs={5}>
-                                <FormControl fullWidth>
+                                <FormControl fullWidth size={'small'}>
+                                    <InputLabel id="countrySelectLabel">Country</InputLabel>
                                     <Select
-                                        id="demo-simple-select"
-                                        label="Choose Country"
+                                        labelId="countrySelectLabel"
+                                        id="countrySelect"
+                                        label="Country"
+                                        value={selectedCountry}
+                                        onChange={(event) => {this.handleTenantSelectChange(event)}}
                                     >
-                                        <MenuItem value={10}>Ten</MenuItem>
-                                        <MenuItem value={20}>Twenty</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                    {
+                                        countries.map((tenant) => (
+                                            <MenuItem value={tenant.id}>{tenant.country}</MenuItem>
+                                        ))
+                                    }
                                     </Select>
-                                    <FormHelperText>*You must choose country first</FormHelperText>
                                 </FormControl>
                             </Grid>
                             <Grid item xs={5}>
-                                <FormControl fullWidth>
+                                <FormControl fullWidth size={'small'}>
+                                    <InputLabel id="regionSelectLabel">Region</InputLabel>
                                     <Select
-                                        id="demo-simple-select"
-                                        label="Country"
+                                        labelId="regionSelectLabel"
+                                        id="regionSelect"
+                                        label="Region"
+                                        value={selectedRegion}
+                                        onChange={(e) => {this.handleRegionSelectChange(e)}}
                                     >
-                                        <MenuItem value={10}>Ten</MenuItem>
-                                        <MenuItem value={20}>Twenty</MenuItem>
-                                        <MenuItem value={30}>Thirty</MenuItem>
+                                        {
+                                            regions.map((region) => (
+                                                <MenuItem value={region.sequence.toLocaleString()}>{region.name}</MenuItem>
+                                            ))
+                                        }
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -123,7 +267,29 @@ class RegionDistricts extends Component<Props, State> {
                 <Grid item xs={1}/>
                 <Grid item xs={10} style={{height: '60vh'}}>
                     <Paper style={{paddingTop: 10, height: '59vh'}}>
-
+                        <TableContainer>
+                            <Table sx={{ maxHeight: 600}} aria-label="simple table">
+                                <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                                    <TableRow>
+                                        <TableCell align="center">Country</TableCell>
+                                        <TableCell align="center">Region</TableCell>
+                                        <TableCell align="center">Name</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {districts.map((district) => (
+                                        <TableRow
+                                            key={district.sequence}
+                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        >
+                                            <TableCell align="center">{selectedCountry}</TableCell>
+                                            <TableCell align="center">{selectedRegion}</TableCell>
+                                            <TableCell align="center">{district.name}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </Paper>
                 </Grid>
                 <Grid item xs={1}/>
@@ -177,18 +343,19 @@ class RegionDistricts extends Component<Props, State> {
                                 <TextField
                                     label="Region Name"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    onChange={(event) => {this.onChangeNewRegionTextBox(event)}}/>
                             </Grid>
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => {this.setState({isAddNewRegionOpen: false})}}>Save</Button>
+                        <Button onClick={() => {this.addNewRegion()}}>Save</Button>
                         <Button onClick={() => {this.setState({isAddNewRegionOpen: false})}}>Cancel</Button>
                     </DialogActions>
                 </Dialog>
 
                 <Dialog open={this.state.isAddNewDistrictOpen} maxWidth="xs">
-                    <DialogTitle>Add New Region</DialogTitle>
+                    <DialogTitle>Add New District</DialogTitle>
                     <DialogContent>
                         <Grid container spacing={1}>
                             <Grid item xs={12}>
@@ -209,17 +376,17 @@ class RegionDistricts extends Component<Props, State> {
                             </Grid>
                             <Grid item xs={12}>
                                 <FormControl fullWidth size={'small'}>
-                                    <InputLabel id="regionSelectLabel">District</InputLabel>
+                                    <InputLabel id="regionSelectLabel2">Region</InputLabel>
                                     <Select
-                                        labelId="regionSelectLabel"
-                                        id="regionSelectModal"
+                                        labelId="regionSelectLabel2"
+                                        id="regionSelectModal2"
                                         label="Region"
-                                        value={selectedTenantModal2}
+                                        value={this.state.selectedRegionIdModal2}
                                         onChange={(e) => {this.handleRegionSelectChangeModal(e)}}
                                     >
                                         {
-                                            regionsModal.map((region) => (
-                                                    <MenuItem value={region.sequence.toLocaleString()}>{region.name}</MenuItem>
+                                            regionsModal2.map((region) => (
+                                                <MenuItem value={region.sequence}>{region.name}</MenuItem>
                                             ))
                                         }
                                     </Select>
@@ -227,15 +394,16 @@ class RegionDistricts extends Component<Props, State> {
                             </Grid>
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Region Name"
+                                    label="District Name"
                                     fullWidth
-                                    variant="standard"/>
+                                    variant="standard"
+                                    onChange={(event) => {this.onChangeNewDistrictTextBox(event)}}/>
                             </Grid>
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => {this.setState({isAddNewRegionOpen: false})}}>Save</Button>
-                        <Button onClick={() => {this.setState({isAddNewRegionOpen: false})}}>Cancel</Button>
+                        <Button onClick={() => {this.addNewDistrict()}}>Save</Button>
+                        <Button onClick={() => {this.setState({isAddNewDistrictOpen: false})}}>Cancel</Button>
                     </DialogActions>
                 </Dialog>
             </Grid>

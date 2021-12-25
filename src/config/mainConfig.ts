@@ -7,3 +7,5 @@ export const villages = "/tenant/village/village";
 export const user = "/user/user";
 export const users = "/user/users";
 export const crops = "/crop/crops";
+export const newRegion = "/tenant/region/region";
+export const newDistrict = "/tenant/district/district";
