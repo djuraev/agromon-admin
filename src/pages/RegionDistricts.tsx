@@ -267,8 +267,8 @@ class RegionDistricts extends Component<Props, State> {
                 <Grid item xs={1}/>
                 <Grid item xs={10} style={{height: '60vh'}}>
                     <Paper style={{paddingTop: 10, height: '59vh'}}>
-                        <TableContainer>
-                            <Table sx={{ maxHeight: 600}} aria-label="simple table">
+                        <TableContainer sx={{ maxHeight: 500}} aria-label="simple table">
+                            <Table stickyHeader>
                                 <TableHead style={{backgroundColor: 'whitesmoke'}}>
                                     <TableRow>
                                         <TableCell align="center">Country</TableCell>

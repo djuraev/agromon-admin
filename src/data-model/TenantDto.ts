@@ -4,12 +4,16 @@ class TenantDto {
     id: number;
     country: string;
     code: string;
+    capital: string;
+    coordinates: string;
     names: Name[];
 
-    constructor(id: number, contry: string, code: string, names: Name[]) {
+    constructor(id: number, country: string, code: string, capital: string, coordinates: string, names: Name[]) {
         this.id = id;
-        this.country = contry;
+        this.country = country;
         this.code = code;
+        this.capital = capital;
+        this.coordinates = coordinates;
         this.names = names;
     }
 

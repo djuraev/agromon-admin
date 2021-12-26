@@ -3,8 +3,6 @@ import TenantDto from '../data-model/TenantDto';
 import {mainServer, tenant} from '../config/mainConfig';
 import axios from 'axios';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
-import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
-
 
 interface Props {
 
@@ -25,7 +23,7 @@ class TenantsTable extends React.Component<Props, State> {
     }
 
     async componentDidMount() {
-       // this.retrieveTenants();
+        this.retrieveTenants();
     }
 
     retrieveTenants() {

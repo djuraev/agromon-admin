@@ -62,6 +62,9 @@ interface State {
     rePassword: string;
     //
     users: UserDto[];
+    dateOfBirth: string;
+    phoneNumber: string;
+    extraInfo: string;
 }
 
 class Users extends Component<Props, State> {
@@ -95,6 +98,9 @@ class Users extends Component<Props, State> {
             password: '',
             rePassword: '',
             users: [],
+            phoneNumber: '',
+            extraInfo: '',
+            dateOfBirth: '',
         };
     }
 
@@ -113,7 +119,7 @@ class Users extends Component<Props, State> {
 
     async onClickAddUserDialogSave() {
         const {surname, name, email, insuNumber, password, rePassword} = this.state;
-        const { selectedTenantModal, selectedRegionIdModal, selectedDistrictModal, selectedVillageIdModal } = this.state;
+        const { selectedTenantModal, selectedRegionIdModal, selectedDistrictModal, selectedVillageIdModal, phoneNumber, extraInfo, dateOfBirth } = this.state;
 
         const userInfo = {
             'tenantId': selectedTenantModal,
@@ -125,6 +131,9 @@ class Users extends Component<Props, State> {
             'name': name,
             'email': email,
             'password': password,
+            'dateOfBirth': dateOfBirth,
+            'extraInfo': extraInfo,
+            'phoneNumber': phoneNumber,
             'roles': ['USER']
         };
         if (password !== rePassword) {
@@ -142,6 +151,7 @@ class Users extends Component<Props, State> {
                 }
             })
             .catch(error => alert(JSON.stringify(error)));
+        this.setAddUserDialog(false)
     }
 
     onClickAddUserDialogCancel() {
@@ -340,10 +350,23 @@ class Users extends Component<Props, State> {
         this.setState({rePassword: event.target.value});
     }
 
+    private onChangeBirthOfDate(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({dateOfBirth: e.target.value});
+    }
+
+    private onChangeExtraInfo(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({extraInfo: e.target.value});
+    }
+
+    private onChangePhoneNumber(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({phoneNumber: e.target.value});
+    }
+
     render() {
         const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
                 districts, selectedDistrictId, villages, selectedVillageId,
                 tenantsModal, regionsModal, districtsModal, villagesModal,
+                dateOfBirth, extraInfo, phoneNumber,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal } = this.state;
 
         const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
@@ -624,6 +647,25 @@ class Users extends Component<Props, State> {
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField
+                                    label="Date of Birth(DD.MM.YYYY)"
+                                    fullWidth
+                                    variant="standard"
+                                    value={dateOfBirth}
+                                    onChange={(e) => {this.onChangeBirthOfDate(e)}}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField
+                                    label="Phone Number"
+                                    fullWidth
+                                    variant="standard"
+                                    value={phoneNumber}
+                                    onChange={(e) => {this.onChangePhoneNumber(e)}}
+                                >
+                                </TextField>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField
                                     label="Password"
                                     fullWidth
                                     variant="standard"
@@ -640,6 +682,14 @@ class Users extends Component<Props, State> {
                                     value={rePassword}
                                     type="password"
                                     onChange={(e) => {this.onChangeRePassword(e)}}/>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Extra info"
+                                    fullWidth
+                                    variant="standard"
+                                    value={extraInfo}
+                                    onChange={(e) => {this.onChangeExtraInfo(e)}}/>
                             </Grid>
                         </Grid>
                     </DialogContent>

@@ -1,16 +1,18 @@
 import React, {Component} from 'react';
 import {
     Dialog, DialogActions, DialogTitle, TextField,
-    Grid, Paper, Divider, Button,
+    Grid, Paper, Divider, Button, Table, TableHead, TableRow, TableCell, TableBody, TableContainer,
 } from '@mui/material';
 import TenantDto from '../data-model/TenantDto';
-import {mainServer, tenant} from '../config/mainConfig';
+import {mainServer, newRegion, newTenant, tenant} from '../config/mainConfig';
 import axios from 'axios';
-import TenantsTable from '../comp/TenantsTable';
 import DrawControl from 'react-mapbox-gl-draw';
 import ReactMapboxGl from "react-mapbox-gl";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import DialogContent from '@mui/material/DialogContent';
+import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
+import PublicIcon from '@mui/icons-material/Public';
+import VideoLabelIcon from '@mui/icons-material/VideoLabel';
 
 const Map = ReactMapboxGl({
     accessToken:
@@ -25,6 +27,12 @@ interface State {
     tenants: TenantDto[];
     mapViewStyle: string;
     isDialogOpen: boolean;
+    newTenantName: string;
+    newTenantCode: string;
+    newTenantCapital: string;
+    newTenantCoordinates: string;
+    currentLong: number;
+    currentLat: number;
 }
 
 
@@ -38,11 +46,17 @@ class Tenants extends Component<Props, State> {
             tenants: [],
             mapViewStyle: "mapbox://styles/mapbox/satellite-v9",
             isDialogOpen: false,
+            newTenantName: '',
+            newTenantCode: '',
+            newTenantCapital: '',
+            newTenantCoordinates: '',
+            currentLat: 0,
+            currentLong: 0,
         }
     }
 
     async componentDidMount() {
-      //this.retrieveTenants();
+      this.retrieveTenants();
     }
 
     retrieveTenants() {
@@ -81,6 +95,24 @@ class Tenants extends Component<Props, State> {
     }
 
     onClickSave() {
+        const {newTenantName, newTenantCode, newTenantCapital, newTenantCoordinates} = this.state;
+        const tenant = {
+            "code": newTenantCode,
+            "country": newTenantName,
+            "capital": newTenantCapital,
+            "coordinates": newTenantCoordinates
+        }
+
+        axios.post(mainServer + newTenant, tenant)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+                else {
+                    alert("Country successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
         this.setState({isDialogOpen: false})
     }
 
@@ -88,15 +120,67 @@ class Tenants extends Component<Props, State> {
         this.setState({isDialogOpen: true})
     }
 
+    onChangeNewTenantName(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({newTenantName: event.target.value});
+    }
+
+    onChangeNewTenantCode(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({newTenantCode: event.target.value});
+    }
+
+    onChangeNewTenantCapital(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({newTenantCapital: event.target.value});
+    }
+
+    onChangeNewTenantCoordinates(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({newTenantCoordinates: event.target.value});
+    }
+
+    onClickTableRow(tenantId: number) {
+        const {tenants} = this.state;
+        const selectedTenant = tenants.find(tenant => tenant.id === tenantId);
+        if (selectedTenant) {
+            const coordinates = selectedTenant.coordinates.split(":");
+            const long = parseFloat(coordinates[0]);
+            const lat = parseFloat(coordinates[1]);
+            this.setState({currentLong: lat, currentLat: long});
+        }
+    }
+
     render() {
-        const { isDialogOpen } = this.state;
+        const { isDialogOpen, tenants, newTenantCapital, newTenantCode, newTenantName, newTenantCoordinates } = this.state;
+        const {currentLat, currentLong} = this.state;
         return (
           <Grid container spacing={2}>
               <Grid item xs={12} style={{textAlign: 'center'}}>
                   <h3>Tenants Info</h3>
               </Grid>
               <Grid item xs={4}>
-                  <TenantsTable/>
+                  <TableContainer sx={{ maxWidth: 500, maxHeight: 600}} aria-label="sticky table">
+                      <Table stickyHeader>
+                          <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                              <TableRow>
+                                  <TableCell align="center">ID</TableCell>
+                                  <TableCell align="center">Country Name</TableCell>
+                                  <TableCell align="center">Code</TableCell>
+                                  <TableCell align="center">-</TableCell>
+                              </TableRow>
+                          </TableHead>
+                          <TableBody>
+                              {tenants.map((tenant) => (
+                                  <TableRow
+                                      key={tenant.id}
+                                      sx={{ '&:last-child td, &:last-child th': { border: 0 }}}
+                                      onClick={(event) => {this.onClickTableRow(tenant.id)}}>
+                                      <TableCell align="center">{tenant.id}</TableCell>
+                                      <TableCell align="center">{tenant.country}</TableCell>
+                                      <TableCell align="center">{tenant.country}</TableCell>
+                                      <TableCell align="center"><Button><AssistantDirectionIcon/></Button></TableCell>
+                                  </TableRow>
+                              ))}
+                          </TableBody>
+                      </Table>
+                  </TableContainer>
               </Grid>
               <Grid item xs={7}>
                   <Grid container spacing={1}>
@@ -104,7 +188,7 @@ class Tenants extends Component<Props, State> {
                           <Paper style={{padding: 5}}>
                           <Map
                               style="mapbox://styles/mapbox/light-v10" // eslint-disable-line
-                              center = {[69.240562, 41.311081]}
+                              center = {[currentLong, currentLat]}
                               containerStyle={{
                                   height: "450px",
                                   width: "800px"
@@ -114,17 +198,24 @@ class Tenants extends Component<Props, State> {
                           </Map>
                           </Paper>
                       </Grid>
-                      <Grid xs={1}></Grid>
+                      <Grid xs={1}/>
                   </Grid>
               </Grid>
               <Grid xs={12}>
               <Divider/>
               </Grid>
               <Grid xs={6} style={{display:'flex', justifyContent:'right', alignItems:'center', paddingTop: 25, paddingRight: 5}}>
-                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>+ Add New Tenant</Button>
+                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>
+                      <PublicIcon/>
+                      &nbsp;&nbsp;
+                      Add New Country</Button>
               </Grid>
               <Grid xs={6} style={{display:'flex', justifyContent:'left', alignItems:'center', paddingTop: 25, paddingLeft: 5}}>
-                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>+ Add Tenant Name</Button>
+                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>
+                      <VideoLabelIcon/>
+                      &nbsp;&nbsp;
+                      Add Country Name
+                  </Button>
               </Grid>
               <Dialog open={isDialogOpen} maxWidth="xs">
                   <DialogTitle>Add New Country</DialogTitle>
@@ -134,31 +225,46 @@ class Tenants extends Component<Props, State> {
                               <TextField
                                   label="Country Name"
                                   fullWidth
-                                  variant="standard"/>
+                                  variant="standard"
+                                  value={newTenantName}
+                                  onChange={(event) => {this.onChangeNewTenantName(event)}}/>
                           </Grid>
                           <Grid item xs={12}>
                               <TextField
                                   label="Country Code"
                                   fullWidth
-                                  variant="standard"/>
+                                  variant="standard"
+                                  value={newTenantCode}
+                                  onChange={(event) => {this.onChangeNewTenantCode(event)}}/>
                           </Grid>
                           <Grid item xs={12}>
                               <TextField
                                   label="Capital"
                                   fullWidth
-                                  variant="standard"/>
+                                  variant="standard"
+                                  value={newTenantCapital}
+                                  onChange={(event) => {this.onChangeNewTenantCapital(event)}}/>
                           </Grid>
                           <Grid item xs={12}>
                               <TextField
-                                  label="Capital location[long:lat]"
+                                  label="Capital location[lat:long]"
                                   fullWidth
-                                  variant="standard"/>
+                                  variant="standard"
+                                  value={newTenantCoordinates}
+                                  onChange={(event) => {this.onChangeNewTenantCoordinates(event)}}
+                                  />
                           </Grid>
                       </Grid>
                   </DialogContent>
                   <DialogActions>
-                      <Button onClick={() => {this.onClickSave()}}>Save</Button>
-                      <Button onClick={() => {this.onClickCancel()}}>Cancel</Button>
+                      <Button
+                          onClick={() => {this.onClickSave()}}>
+                          Save
+                      </Button>
+                      <Button
+                          onClick={() => {this.onClickCancel()}}>
+                          Cancel
+                      </Button>
                   </DialogActions>
               </Dialog>
           </Grid>
