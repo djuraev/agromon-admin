@@ -21,6 +21,7 @@ import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VillaIcon from '@mui/icons-material/Villa';
+import CSVReader from 'react-csv-reader';
 
 interface Props {
 
@@ -35,6 +36,15 @@ interface State {
     selectedRegion: string;
     selectedDistrict: string;
 }
+
+const handleForce = (data: any, fileInfo: any) => console.log(data, fileInfo);
+
+const papaparseOptions = {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    transformHeader: (header: string) => header.toLowerCase().replace(/\W/g, "_")
+};
 class Villages extends Component<Props, State> {
     //
     constructor(props: Props) {
@@ -97,6 +107,7 @@ class Villages extends Component<Props, State> {
                 alert(error);
             });
     }
+
     getRegionDistricts(regionId: string, isModal: boolean) {
         const url = mainServer + districts+"/"+regionId;
         axios({
@@ -277,16 +288,22 @@ class Villages extends Component<Props, State> {
                             <Grid item xs={2}>
                                 <ButtonGroup style={{marginLeft: 10}}>
                                 <Button
-                                    variant="outlined">
+                                    variant="contained"
+                                    component="label">
+                                    <input
+                                        type="file"
+                                        hidden
+                                    />
                                     <DriveFolderUploadIcon/>
                                     &nbsp;&nbsp;Browse
                                 </Button>
-                                    <Button
-                                        variant="outlined">
-                                        <CloudUploadIcon/>
-                                        &nbsp;&nbsp;Upload
-                                    </Button>
+                                <Button
+                                    variant="outlined">
+                                    <CloudUploadIcon/>
+                                    &nbsp;&nbsp;Upload
+                                </Button>
                                 </ButtonGroup>
+
                             </Grid>
                             <Grid item xs={1}/>
                             <Grid item xs={3}>

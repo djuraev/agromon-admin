@@ -8,13 +8,13 @@ interface Props {
 interface State {
 
 }
-class Metrics extends Component<Props, State> {
+class VillageMetrics extends Component<Props, State> {
     //
     render() {
         return (
-            "Metrics Page"
+            "VillageMetrics Page"
         );
     }
 }
 
-export default Metrics;
+export default VillageMetrics;

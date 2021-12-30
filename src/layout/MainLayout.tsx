@@ -9,9 +9,12 @@ import HolidayVillageIcon from '@mui/icons-material/HolidayVillage';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import PollIcon from '@mui/icons-material/Poll';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import GrainIcon from '@mui/icons-material/Grain';
+import PanoramaPhotosphereIcon from '@mui/icons-material/PanoramaPhotosphere';
+import VillaIcon from '@mui/icons-material/Villa';
 import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
 import Dashboard from '../pages/dashboard';
-import Metrics from '../pages/Metrics';
+import MetricsAndCrops from '../pages/metrics/MetricsAndCrops';
 import Tenants from '../pages/Tenants';
 import Users from '../pages/Users';
 import Villages from '../pages/Villages';
@@ -19,6 +22,8 @@ import RegionDistricts from '../pages/RegionDistricts';
 import Fields from '../pages/fields';
 import 'react-pro-sidebar/dist/css/styles.css';
 import logo from '../img/logo.png';
+import DistrictMetrics from '../pages/metrics/DistrictMetrics';
+import VillageMetrics from '../pages/metrics/VillageMetrics';
 
 interface State {
 
@@ -77,9 +82,21 @@ class MainLayout extends Component<State, Props> {
                                 </Link>
                             </MenuItem>
                             <SubMenu icon={<PollIcon/>} title="Metrics">
-                                <MenuItem>Tenants</MenuItem>
-                                <MenuItem>Region & Districts</MenuItem>
-                                <MenuItem>Villages</MenuItem>
+                                <MenuItem icon={<GrainIcon/>}>
+                                    <Link to={"/metrics"}>
+                                    Metrics/Crops
+                                    </Link>
+                                </MenuItem>
+                                <MenuItem icon={<PanoramaPhotosphereIcon/>}>
+                                    <Link to={"/districtMetrics"}>
+                                    District Metrics
+                                    </Link>
+                                </MenuItem>
+                                <MenuItem icon={<VillaIcon/>}>
+                                    <Link to={"/villageMetrics"}>
+                                        Village Metrics
+                                    </Link>
+                                    </MenuItem>
                             </SubMenu>
                         </Menu>
 
@@ -97,7 +114,7 @@ class MainLayout extends Component<State, Props> {
                                 <Tenants/>
                             </Route>
                             <Route path='/metrics'>
-                                <Metrics/>
+                                <MetricsAndCrops/>
                             </Route>
                             <Route path='/users'>
                                 <Users/>
@@ -110,6 +127,12 @@ class MainLayout extends Component<State, Props> {
                             </Route>
                             <Route path='/region'>
                                 <RegionDistricts/>
+                            </Route>
+                            <Route path='/districtMetrics'>
+                                <DistrictMetrics/>
+                            </Route>
+                            <Route path='/villageMetrics'>
+                                <VillageMetrics/>
                             </Route>
                         </Switch>
                 </Grid>
