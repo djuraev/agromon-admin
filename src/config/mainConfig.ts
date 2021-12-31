@@ -10,3 +10,4 @@ export const users = "/user/users";
 export const crops = "/crop/crops";
 export const newRegion = "/tenant/region/region";
 export const newDistrict = "/tenant/district/district";
+export const fields = "/field/field";

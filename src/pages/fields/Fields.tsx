@@ -26,7 +26,7 @@ import SaveSharpIcon from '@mui/icons-material/SaveSharp';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import UserDto from '../../data-model/UserDto';
 import axios from 'axios';
-import {crops, mainServer, user, villages} from '../../config/mainConfig';
+import {crops, fields, mainServer, newRegion, user, villages} from '../../config/mainConfig';
 import CropDto from '../../data-model/CropDto';
 import VillageDto from '../../data-model/VillageDto';
 
@@ -52,6 +52,7 @@ interface State {
     fieldArea: string;
     fieldComment: string;
     fieldPolygon: string;
+    fieldPolygonInfo: string;
 }
 
 const Map = ReactMapboxGl({
@@ -80,6 +81,7 @@ class Fields extends Component<Props, State> {
             fieldArea: '',
             fieldComment: '',
             fieldPolygon: '',
+            fieldPolygonInfo: '',
         }
     }
 
@@ -94,15 +96,20 @@ class Fields extends Component<Props, State> {
         let coordinates = features[0].geometry.coordinates[0];
         console.log(coordinates);
 
-        let rawStr: string;
-        rawStr = '';
+        let rawStr: string = '';
+        let rawInfoStr: string = '';
+
         for (let i=0; i<coordinates.length; i++) {
-            console.log(coordinates[i][0]+", "+coordinates[i][1]);
             rawStr += '['+coordinates[i][0]+', '+coordinates[i][1]+']\n';
+            rawInfoStr += +coordinates[i][0]+'+'+coordinates[i][1]+':';
         }
+        rawInfoStr = rawInfoStr.substring(0, rawInfoStr.length-1);
+        alert(rawInfoStr);
         // @ts-ignore
-        document.getElementById("coordinatesArea").value = rawStr;
+        //document.getElementById("coordinatesArea").value = rawStr;
+        this.setState({fieldPolygon: rawStr, fieldPolygonInfo: rawInfoStr});
     };
+
 
     async getCurrentLocation() {
         await navigator.geolocation.getCurrentPosition(
@@ -117,6 +124,7 @@ class Fields extends Component<Props, State> {
     onDrawUpdate(points: any ){
         const {features} = points;
         console.log(features[0].geometry.coordinates);
+
     };
 
     onChangeMapStyle(style: string) {
@@ -235,21 +243,32 @@ class Fields extends Component<Props, State> {
         this.setState({fieldPolygon: event.target.value});
     }
 
-    onClickSaveButton() {
-        const {selectedCrop, selectedVillage, fieldComment, fieldArea, fieldName, fieldPolygon, currentUser} = this.state;
+    async onClickSaveButton() {
+        const {selectedCrop, selectedVillage, fieldComment, fieldArea, fieldName, currentUser, fieldPolygonInfo} = this.state;
         const userField = {
             "tenantId": currentUser.tenantId,
             "username": currentUser.insuranceNumber,
             "villageSequence": currentUser.villageSequence,
             "villageName": selectedVillage,
             "name": fieldName,
-            "polygon": fieldPolygon,
+            "polygon": fieldPolygonInfo,
             "cropId": selectedCrop,
             "cropName": selectedCrop,
             "comment": fieldComment,
             "userArea": fieldArea
         };
-        alert(JSON.stringify(userField));
+        //alert(JSON.stringify(userField));
+        let url = mainServer + fields;
+        axios.post(url, userField)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+                else {
+                    alert("User field successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
     }
 
     render() {
@@ -391,7 +410,7 @@ class Fields extends Component<Props, State> {
                                         </Grid>
                                         <Grid item xs={3}/>
                                         <Grid item xs={3}>
-                                            <Button variant="outlined" onClick={this.onClickSaveButton}><SaveSharpIcon/>&nbsp;&nbsp;Save</Button>
+                                            <Button variant="outlined" onClick={() => {this.onClickSaveButton().then()}}><SaveSharpIcon/>&nbsp;&nbsp;Save</Button>
                                         </Grid>
                                         <Grid item xs={3} >
                                             <Button
@@ -421,7 +440,7 @@ class Fields extends Component<Props, State> {
                                             width: '100%'
                                         }}
                                     >
-                                        <DrawControl onDrawCreate={this.onDrawCreate} onDrawUpdate={() => this.onDrawUpdate} />
+                                        <DrawControl onDrawCreate={(point) => {this.onDrawCreate(point)}} onDrawUpdate={() => this.onDrawUpdate} />
                                     </Map>
                                 </Grid>
                                 <Grid item xs={12} style={{margin:5, width:2}}>

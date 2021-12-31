@@ -1,7 +1,7 @@
 import React, {Component, PointerEventHandler} from 'react';
 import {
     Button, Dialog, DialogActions, DialogTitle, Divider, FormControl,
-    Grid, InputLabel, MenuItem,
+    Grid, InputLabel, List, ListItem, MenuItem,
     Paper,
     Select, SelectChangeEvent, Stack,
     Table,
@@ -9,7 +9,7 @@ import {
     TableContainer,
     TableFooter, TableHead,
     TablePagination,
-    TableRow, TextField
+    TableRow, TextField, Typography
 } from '@mui/material';
 import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
@@ -20,12 +20,13 @@ import AddCardIcon from '@mui/icons-material/AddCard';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import axios from 'axios';
 import DialogContent from '@mui/material/DialogContent';
-import {districts, mainServer, regions, tenant, user, users, villages} from '../config/mainConfig';
+import {districts, fields, mainServer, regions, tenant, user, users, villages} from '../config/mainConfig';
 import TenantDto from '../data-model/TenantDto';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
 import VillageDto from '../data-model/VillageDto';
 import UserDto from '../data-model/UserDto';
+import FieldDto from '../data-model/FieldDto';
 
 interface Props {
 
@@ -65,6 +66,10 @@ interface State {
     dateOfBirth: string;
     phoneNumber: string;
     extraInfo: string;
+    selectedUser: UserDto;
+    isAboutDialogOpen: boolean;
+    isUserFieldsDialogOpen: boolean;
+    userFields: FieldDto[];
 }
 
 class Users extends Component<Props, State> {
@@ -101,6 +106,10 @@ class Users extends Component<Props, State> {
             phoneNumber: '',
             extraInfo: '',
             dateOfBirth: '',
+            selectedUser: UserDto.of(),
+            isAboutDialogOpen: false,
+            isUserFieldsDialogOpen: false,
+            userFields: [],
         };
     }
 
@@ -266,7 +275,28 @@ class Users extends Component<Props, State> {
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({users: response.data.entities[0]});
+                    let users: UserDto[] = response.data.entities[0];
+                    this.setState({users: users});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getUserFields(userId: string) {
+        const url = mainServer + fields+"/"+userId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    let userFields: FieldDto[] = response.data.entities[0];
+                    this.setState({userFields: userFields});
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -356,10 +386,39 @@ class Users extends Component<Props, State> {
 
     private onChangeExtraInfo(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({extraInfo: e.target.value});
+        alert(JSON.stringify(e.target.value));
     }
 
     private onChangePhoneNumber(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({phoneNumber: e.target.value});
+    }
+
+    private onClickAboutButton(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState({isAboutDialogOpen: true});
+        const selectedUserId = parseInt(e.currentTarget.value);
+        const {users} = this.state;
+        const selectedUser = users.find(user => user.sequence === selectedUserId);
+        if (selectedUser)
+            this.setState({selectedUser: selectedUser});
+    }
+
+    onClickAboutWindowClose() {
+        this.setState({isAboutDialogOpen: false});
+    }
+
+    onClickUserFieldsButton(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState({isUserFieldsDialogOpen: true});
+        const selectedUserId = parseInt(e.currentTarget.value);
+        const {users} = this.state;
+        const selectedUser = users.find(user => user.sequence === selectedUserId);
+        if (selectedUser) {
+            this.setState({selectedUser: selectedUser});
+            this.getUserFields(selectedUser.insuranceNumber);
+        }
+    }
+
+    onClickUserFieldDialogClose() {
+        this.setState({isUserFieldsDialogOpen: false});
     }
 
     render() {
@@ -367,7 +426,8 @@ class Users extends Component<Props, State> {
                 districts, selectedDistrictId, villages, selectedVillageId,
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 dateOfBirth, extraInfo, phoneNumber,
-                selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal } = this.state;
+                selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal,
+                selectedUser, userFields} = this.state;
 
         const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
         return (
@@ -485,11 +545,11 @@ class Users extends Component<Props, State> {
                                         <TableCell align="center">{usr.name}</TableCell>
                                         <TableCell align="center">{usr.insuranceNumber}</TableCell>
                                         <TableCell align="center">{usr.email}</TableCell>
-                                        <TableCell align="center">{usr.tenantId}</TableCell>
+                                        <TableCell align="center">{usr.country}</TableCell>
                                         <TableCell align="center">
                                             <Stack direction="row" spacing={1} alignItems="center">
-                                                <Button value={usr.sequence}><InfoIcon/></Button>
-                                                <Button value={usr.sequence}><SatelliteAltIcon/></Button>
+                                                <Button value={usr.sequence} onClick={(event) =>{this.onClickAboutButton(event);}}><InfoIcon/></Button>
+                                                <Button value={usr.sequence} onClick={(event) => {this.onClickUserFieldsButton(event)}}><SatelliteAltIcon/></Button>
                                                 <Button value={usr.sequence}><AddCardIcon/></Button>
                                                 <Button value={usr.sequence}><AssistantDirectionIcon/></Button>
                                                 <Button value={usr.sequence}><DeleteIcon/></Button>
@@ -696,6 +756,105 @@ class Users extends Component<Props, State> {
                     <DialogActions>
                         <Button onClick={() => this.onClickAddUserDialogSave().then()}>Save</Button>
                         <Button onClick={() => this.onClickAddUserDialogCancel()}>Cancel</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={this.state.isAboutDialogOpen} maxWidth="sm">
+                    <DialogTitle>User Info</DialogTitle>
+                    <DialogContent>
+                        <Grid container spacing={1} style={{marginTop: 5}} component={Paper}>
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Country:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.country}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Region:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.region}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>District:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.district}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Village:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.village}</Grid>
+                            <Grid item xs={12}><Divider/></Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Surname:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.surname}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Name:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.name}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Birthday:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.dateOfBirth}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Insurance:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.insuranceNumber}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Phone:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.phoneNumber}</Grid>
+
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Email:</Typography></Grid>
+                            <Grid item xs={4}>{selectedUser.email}</Grid>
+
+                            <Grid item xs={12}><Divider/></Grid>
+                            <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Extra Info:</Typography></Grid>
+                            <Grid item xs={10}>{selectedUser.extraInfo}</Grid>
+                            <Grid item xs={12}><Divider/></Grid>
+                            <Grid item xs={5}/>
+                            <Grid item xs={6}>
+                                <Button variant="outlined" onClick={() => {this.onClickAboutWindowClose()}}>Close</Button>
+                            </Grid>
+                            <Grid item xs={4}/>
+                        </Grid>
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={this.state.isUserFieldsDialogOpen} maxWidth="md">
+                    <DialogTitle>User Fields</DialogTitle>
+                    <DialogContent>
+                        <List dense sx={{width: '100%', color: 'background.paper'}}>
+                            {userFields.map((field) => {
+                               return (
+                                   <Paper style={{padding: 5, margin: 5}}>
+                                    <Grid container spacing={1}>
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}> Field Id:</Typography></Grid>
+                                        <Grid item xs={3}>{field.fieldId}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Field Name:</Typography></Grid>
+                                        <Grid item xs={3}>{field.name}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Crop Id:</Typography></Grid>
+                                        <Grid item xs={3}>{field.cropId}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Crop Name:</Typography></Grid>
+                                        <Grid item xs={3}>{field.cropName}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Village:</Typography></Grid>
+                                        <Grid item xs={3}>{field.villageName}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>User Area:</Typography></Grid>
+                                        <Grid item xs={3}>{field.userArea ? field.userArea : '-'}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>API Key:</Typography></Grid>
+                                        <Grid item xs={9}>{field.apiKey}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Comment:</Typography></Grid>
+                                        <Grid item xs={9}>{field.comment ? field.comment : '-'}</Grid>
+
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Agromon Area:</Typography></Grid>
+                                        <Grid item xs={3}>{field.agromonArea ? field.agromonArea : '-'}</Grid>
+
+                                        <Grid item xs={12}/>
+                                        <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Polygon:</Typography></Grid>
+                                        <Grid item xs={9}>
+                                            <TextField
+                                                fullWidth
+                                                value={field.polygon}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Paper>)
+                            })}
+                        </List>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() =>{this.onClickUserFieldDialogClose();}}>Close</Button>
                     </DialogActions>
                 </Dialog>
             </Grid>
