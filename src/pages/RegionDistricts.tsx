@@ -273,7 +273,7 @@ class RegionDistricts extends Component<Props, State> {
                                     <TableRow>
                                         <TableCell align="center">Country</TableCell>
                                         <TableCell align="center">Region</TableCell>
-                                        <TableCell align="center">Name</TableCell>
+                                        <TableCell align="center">District Name</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -284,7 +284,7 @@ class RegionDistricts extends Component<Props, State> {
                                         >
                                             <TableCell align="center">{selectedCountry}</TableCell>
                                             <TableCell align="center">{selectedRegion}</TableCell>
-                                            <TableCell align="center">{district.name}</TableCell>
+                                            <TableCell align="center">{district.name} [{district.sequence}]</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

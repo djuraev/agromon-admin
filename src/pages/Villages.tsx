@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {
-    Button, ButtonGroup, Divider,
+    Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogTitle, Divider,
     FormControl,
     Grid,
     InputLabel,
@@ -14,14 +14,21 @@ import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSha
 import TenantDto from '../data-model/TenantDto';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
-import {districts, mainServer, regions, tenant, villages} from '../config/mainConfig';
+import {districts, mainServer, regions, tenant, user, villages, villages2} from '../config/mainConfig';
 import axios from 'axios';
 import VillageDto from '../data-model/VillageDto';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
-import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
+import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VillaIcon from '@mui/icons-material/Villa';
-import CSVReader from 'react-csv-reader';
+import CSVReader, {IFileInfo} from 'react-csv-reader';
+
+const papaparseOptions = {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    transformHeader: (header: string) => header.toLowerCase().replace(/\W/g, "_")
+};
 
 interface Props {
 
@@ -35,16 +42,12 @@ interface State {
     selectedTenant: string;
     selectedRegion: string;
     selectedDistrict: string;
+    csvFile: any;
+    csvFilePath: string;
+    postVillages: any[];
+    isVillagesPreviewOpen: boolean;
 }
 
-const handleForce = (data: any, fileInfo: any) => console.log(data, fileInfo);
-
-const papaparseOptions = {
-    header: true,
-    dynamicTyping: true,
-    skipEmptyLines: true,
-    transformHeader: (header: string) => header.toLowerCase().replace(/\W/g, "_")
-};
 class Villages extends Component<Props, State> {
     //
     constructor(props: Props) {
@@ -57,11 +60,54 @@ class Villages extends Component<Props, State> {
             selectedTenant: '',
             selectedRegion: '',
             selectedDistrict: '',
+            csvFile: null,
+            csvFilePath: '',
+            postVillages: [],
+            isVillagesPreviewOpen: false,
         }
     }
 
     componentDidMount() {
         this.getTenants();
+    }
+
+    handleForce (data: any[], fileInfo: IFileInfo) {
+        this.setState({csvFilePath: fileInfo.name});
+        let villages: any[] = [];
+        for (let i=0; i<data.length; i++) {
+            const village = {
+                'tenantId' : data[i].tenantid,
+                'districtSequence': data[i].districtid,
+                'name' : data[i].villagename,
+                'coordinates': data[i].latlong,
+                'names': []
+            };
+            villages.push(village);
+        }
+        this.setState({postVillages: villages});
+    }
+
+    handlePreviewButtonClick() {
+        this.setState({isVillagesPreviewOpen: true});
+    }
+
+    uploadVillages() {
+        const {postVillages} = this.state;
+        if (postVillages.length === 0) {
+            alert("No villages selected. Please, select .csv file which contains villages.");
+            return;
+        }
+        const url = mainServer + villages2;
+        axios.post(url, postVillages)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage);
+                }
+                else {
+                    alert("Villages successfully registered.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
     }
 
     getTenants() {
@@ -174,8 +220,24 @@ class Villages extends Component<Props, State> {
         this.getDistrictVillages(selectedValue, false);
     }
 
+    processCSVFile() {
+       /* const {csvFile} = this.state;
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            // @ts-ignore
+            if (event.target.result !== null ) {
+                // @ts-ignore
+                const text = event.target.result;
+                const delim= ',';
+                const headers = text.slice(0, text.indexOf('\n')).split(delim);
+                const rows = str.slice(str.indexOf('\n')+1).split('\n');
+            }
+
+        }*/
+    }
+
     render() {
-        const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict} = this.state;
+        const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
                 <Grid item xs={1}/>
@@ -279,44 +341,79 @@ class Villages extends Component<Props, State> {
                 <Grid item xs={10}>
                     <Paper>
                         <Grid container style={{marginTop: 20, padding: 5, margin: 5}}>
-                            <Grid item xs={5}>
+                            <Grid item xs={4}>
                                 <TextField
                                     fullWidth
                                     size="small"
+                                    value={this.state.csvFilePath}
                                 />
                             </Grid>
-                            <Grid item xs={2}>
-                                <ButtonGroup style={{marginLeft: 10}}>
-                                <Button
-                                    variant="contained"
-                                    component="label">
-                                    <input
-                                        type="file"
-                                        hidden
-                                    />
-                                    <DriveFolderUploadIcon/>
-                                    &nbsp;&nbsp;Browse
-                                </Button>
-                                <Button
-                                    variant="outlined">
-                                    <CloudUploadIcon/>
-                                    &nbsp;&nbsp;Upload
-                                </Button>
-                                </ButtonGroup>
-
+                            <Grid item xs={2} style={{padding: 6}}>
+                                <CSVReader
+                                    cssClass="react-csv-input"
+                                    onFileLoaded={(data, fileInfo) => {this.handleForce(data, fileInfo)}}
+                                    parserOptions={papaparseOptions}
+                                />
                             </Grid>
                             <Grid item xs={1}/>
-                            <Grid item xs={3}>
+                            <Grid item xs={5}>
+                                <ButtonGroup>
                                 <Button
-                                    variant="outlined">
-                                    <VillaIcon/>
-                                    &nbsp;&nbsp;Add New Village
+                                    variant="outlined"
+                                    onClick={(event) => {this.handlePreviewButtonClick()}}>
+                                    <PreviewIcon/>
+                                    &nbsp;&nbsp;Preview
                                 </Button>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={(event) => {this.uploadVillages()}}>
+                                        <CloudUploadIcon/>
+                                        &nbsp;&nbsp;Upload
+                                    </Button>
+                                </ButtonGroup>
                             </Grid>
                         </Grid>
                     </Paper>
                 </Grid>
                 <Grid item xs={1}/>
+                <Dialog open={this.state.isVillagesPreviewOpen}>
+                    <DialogTitle>Parsed Villages</DialogTitle>
+                    <DialogContent>
+                        <TableContainer>
+                            <Table aria-label="simple table">
+                                <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                                    <TableRow>
+                                        <TableCell align="center">Country Id</TableCell>
+                                        <TableCell align="center">District Id</TableCell>
+                                        <TableCell align="center">Name</TableCell>
+                                        <TableCell align="center">Coordinates</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {postVillages.map((village) => (
+                                        <TableRow
+                                            key={village.tenantId}
+                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        >
+                                            <TableCell align="center">{village.tenantId}</TableCell>
+                                            <TableCell align="center">{village.districtSequence}</TableCell>
+                                            <TableCell align="center">{village.name}</TableCell>
+                                            <TableCell align="center">{village.coordinates}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            variant="contained"
+                            onClick={()=>{this.setState({isVillagesPreviewOpen: false})}}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Grid>
         );
     }

@@ -5,6 +5,7 @@ export const newTenant = "/tenant/tenants";
 export const regions = "/tenant/region/regions/id";
 export const districts = "/tenant/district/districts";
 export const villages = "/tenant/village/village";
+export const villages2 = "/tenant/village/villages";
 export const user = "/user/user";
 export const users = "/user/users";
 export const crops = "/crop/crops";
@@ -16,3 +17,5 @@ export const metrics = "/metric/metrics";
 export const metric = "/metric/metric";
 export const villageMetrics = "/village-metric/village"
 export const districtMetrics = "/district-metric/metric"
+export const villageFields = "/field/fields";
+

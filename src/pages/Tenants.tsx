@@ -4,7 +4,7 @@ import {
     Grid, Paper, Divider, Button, Table, TableHead, TableRow, TableCell, TableBody, TableContainer,
 } from '@mui/material';
 import TenantDto from '../data-model/TenantDto';
-import {mainServer, newRegion, newTenant, tenant} from '../config/mainConfig';
+import {mainServer, newTenant, tenant} from '../config/mainConfig';
 import axios from 'axios';
 import DrawControl from 'react-mapbox-gl-draw';
 import ReactMapboxGl from "react-mapbox-gl";
