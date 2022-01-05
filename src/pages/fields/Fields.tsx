@@ -104,7 +104,7 @@ class Fields extends Component<Props, State> {
             rawInfoStr += +coordinates[i][0]+'+'+coordinates[i][1]+':';
         }
         rawInfoStr = rawInfoStr.substring(0, rawInfoStr.length-1);
-        alert(rawInfoStr);
+        //alert(rawInfoStr);
         // @ts-ignore
         //document.getElementById("coordinatesArea").value = rawStr;
         this.setState({fieldPolygon: rawStr, fieldPolygonInfo: rawInfoStr});
@@ -206,6 +206,18 @@ class Fields extends Component<Props, State> {
     handleOnVillageChange(event: SelectChangeEvent) {
         const villageId = event.target.value;
         this.setState({selectedVillage: villageId});
+        const {villages} = this.state;
+        const village = villages.find(village => village.sequence === parseInt(villageId));
+        if (village) {
+            this.setMapLocation(village.coordinates);
+        }
+    }
+
+    setMapLocation(location: string) {
+        if (location) {
+            const latLong = location.substring(1, location.length-1).split(":");
+            this.setState({currentLat: latLong[0], currentLang: latLong[1]});
+        }
     }
 
     getDistrictVillages(districtId: number) {
@@ -244,12 +256,17 @@ class Fields extends Component<Props, State> {
     }
 
     async onClickSaveButton() {
-        const {selectedCrop, selectedVillage, fieldComment, fieldArea, fieldName, currentUser, fieldPolygonInfo} = this.state;
+        const {selectedCrop, selectedVillage, fieldComment, fieldArea, fieldName, currentUser, fieldPolygonInfo, villages} = this.state;
+        const village = villages.find(village => village.sequence === parseInt(selectedVillage));
+        let villageName: string = '';
+        if (village) {
+            villageName = village.name;
+        }
         const userField = {
             "tenantId": currentUser.tenantId,
             "username": currentUser.insuranceNumber,
-            "villageSequence": currentUser.villageSequence,
-            "villageName": selectedVillage,
+            "villageSequence": selectedVillage,
+            "villageName": villageName,
             "name": fieldName,
             "polygon": fieldPolygonInfo,
             "cropId": selectedCrop,
@@ -257,7 +274,6 @@ class Fields extends Component<Props, State> {
             "comment": fieldComment,
             "userArea": fieldArea
         };
-        //alert(JSON.stringify(userField));
         let url = mainServer + fields;
         axios.post(url, userField)
             .then(response => {

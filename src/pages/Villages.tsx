@@ -20,8 +20,8 @@ import VillageDto from '../data-model/VillageDto';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import VillaIcon from '@mui/icons-material/Villa';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 
 const papaparseOptions = {
     header: true,
@@ -42,7 +42,6 @@ interface State {
     selectedTenant: string;
     selectedRegion: string;
     selectedDistrict: string;
-    csvFile: any;
     csvFilePath: string;
     postVillages: any[];
     isVillagesPreviewOpen: boolean;
@@ -60,7 +59,6 @@ class Villages extends Component<Props, State> {
             selectedTenant: '',
             selectedRegion: '',
             selectedDistrict: '',
-            csvFile: null,
             csvFilePath: '',
             postVillages: [],
             isVillagesPreviewOpen: false,
@@ -369,6 +367,13 @@ class Villages extends Component<Props, State> {
                                         onClick={(event) => {this.uploadVillages()}}>
                                         <CloudUploadIcon/>
                                         &nbsp;&nbsp;Upload
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        /*onClick={(event) => {this.uploadVillages()}}>*/
+                                    >
+                                        <FormatListBulletedIcon/>
+                                        &nbsp;&nbsp;Get Template
                                     </Button>
                                 </ButtonGroup>
                             </Grid>
