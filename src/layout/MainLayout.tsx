@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import { ProSidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
-import {Grid, Paper} from '@mui/material';
+import {Button, Dialog, DialogActions, DialogContent, Grid, Paper, TextField} from '@mui/material';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import PublicRoundedIcon from '@mui/icons-material/PublicRounded';
@@ -30,20 +30,43 @@ import logo from '../img/logo.png';
 import DistrictMetrics from '../pages/metrics/DistrictMetrics';
 import VillageMetrics from '../pages/metrics/VillageMetrics';
 import FieldList from '../pages/fields/FieldList';
+import {Face, Fingerprint} from '@mui/icons-material';
+import Purchases from '../pages/Purchases';
+import Claims from '../pages/Claims';
+import InfoEditor from '../pages/InfoEditor';
 
 interface State {
-
+    username: string;
+    password: string;
+    isLoginModalOpen: boolean;
 }
 
 interface Props {
 
 }
 
-class MainLayout extends Component<State, Props> {
+class MainLayout extends Component<Props, State> {
+
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            username: '',
+            password: '',
+            isLoginModalOpen: true,
+        }
+    }
+
+    handleChangeOnUsername(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({username: event.target.value});
+    }
+
+    handleChangeOnPassword(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({password: event.target.value});
+    }
 
     render() {
+        const {isLoginModalOpen} = this.state;
         return (
-
             <Grid container style={{paddingTop: 10, paddingLeft: 10, paddingRight: 10}}>
                 <BrowserRouter>
                 <Grid item xs={2} style={{height: 80, backgroundColor: '#202020'}}>
@@ -113,18 +136,18 @@ class MainLayout extends Component<State, Props> {
                             </SubMenu>
                             <SubMenu icon={<ShoppingCartIcon/>} title="Purchase/Claim">
                                 <MenuItem icon={<AddShoppingCartIcon/>}>
-                                    <Link to={"/metrics"}>
+                                    <Link to={"/purchases"}>
                                         Purchases
                                     </Link>
                                 </MenuItem>
                                 <MenuItem icon={<CreditScoreIcon/>}>
-                                    <Link to={"/districtMetrics"}>
+                                    <Link to={"/claims"}>
                                         Claims
                                     </Link>
                                 </MenuItem>
                             </SubMenu>
                             <MenuItem icon={<FormatColorTextIcon/>}>
-                                <Link to={"/villageMetrics"}>
+                                <Link to={"/infoEditor"}>
                                     Info Editor
                                 </Link>
                             </MenuItem>
@@ -163,11 +186,68 @@ class MainLayout extends Component<State, Props> {
                             <Route path='/villageMetrics'>
                                 <VillageMetrics/>
                             </Route>
+                            <Route path='/purchases'>
+                                <Purchases/>
+                            </Route>
+                            <Route path='/claims'>
+                                <Claims/>
+                            </Route>
+                            <Route path='/infoEditor'>
+                                <InfoEditor/>
+                            </Route>
                         </Switch>
                 </Grid>
                 </BrowserRouter>
+                <Dialog open={isLoginModalOpen} maxWidth="xs" style={{background: 'black'}}>
+                    <DialogContent >
+
+                            <Grid container spacing={2}>
+                                <Grid item xs={2}>
+                                    <Face fontSize='large'/>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        id="username"
+                                        label="Username"
+                                        type="email"
+                                        size="small"
+                                        autoFocus
+                                        onChange={(event) => {this.handleChangeOnUsername(event)}}
+                                        required />
+                                </Grid>
+                                <Grid item xs={1}/>
+                                <Grid item xs={3}>
+                                    <Button variant={"contained"}>&nbsp;Login&nbsp;</Button>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Fingerprint fontSize='large'/>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        id="password"
+                                        label="Password"
+                                        type="password"
+                                        size="small"
+                                        required
+                                        onChange={(event => {this.handleChangeOnPassword(event)})}
+                                    />
+                                </Grid>
+                                <Grid item xs={1}/>
+                                <Grid item xs={3}>
+                                    <Button
+                                        variant={"contained"}
+                                        onClick={event =>{this.handCancelButtonClick()}}>
+                                        Cancel</Button>
+                                </Grid>
+                            </Grid>
+                    </DialogContent>
+                </Dialog>
             </Grid>
         );
+    }
+
+    private handCancelButtonClick() {
+        this.setState({isLoginModalOpen: false});
     }
 }
 

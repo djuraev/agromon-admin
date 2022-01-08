@@ -19,7 +19,6 @@ class Login extends React.Component<Props, State> {
             username: '',
             password: '',
         }
-
     }
 
     handleChangeOnUsername(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {

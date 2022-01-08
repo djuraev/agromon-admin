@@ -12,8 +12,6 @@ import {
     TableHead, TablePagination, TableRow
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
-import InfoIcon from '@mui/icons-material/Info';
-import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import DeleteIcon from '@mui/icons-material/Delete';
