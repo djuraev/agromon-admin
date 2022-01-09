@@ -152,7 +152,7 @@ class Tenants extends Component<Props, State> {
         const {currentLat, currentLong} = this.state;
         return (
           <Grid container spacing={2}>
-              <Grid item xs={12} style={{textAlign: 'center'}}>
+              <Grid item xs={12} style={{textAlign: 'center', backgroundColor: 'red', margin: 20}}>
                   <h3>Tenants Info</h3>
               </Grid>
               <Grid item xs={4}>

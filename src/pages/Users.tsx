@@ -20,13 +20,26 @@ import AddCardIcon from '@mui/icons-material/AddCard';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import axios from 'axios';
 import DialogContent from '@mui/material/DialogContent';
-import {districts, fields, mainServer, regions, tenant, user, users, villages} from '../config/mainConfig';
+import {
+    districts,
+    fields,
+    mainServer,
+    regions,
+    tenant,
+    user,
+    userClaims,
+    userPurchases,
+    users,
+    villages
+} from '../config/mainConfig';
 import TenantDto from '../data-model/TenantDto';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
 import VillageDto from '../data-model/VillageDto';
 import UserDto from '../data-model/UserDto';
 import FieldDto from '../data-model/FieldDto';
+import PurchaseDto from '../data-model/PurchaseDto';
+import ClaimDto from '../data-model/ClaimDto';
 
 interface Props {
 
@@ -70,6 +83,10 @@ interface State {
     isAboutDialogOpen: boolean;
     isUserFieldsDialogOpen: boolean;
     userFields: FieldDto[];
+    isUserPurchasesDialogOpen: boolean;
+    userPurchases: PurchaseDto[];
+    isUserClaimsDialogOpen: boolean;
+    userClaims: ClaimDto[];
 }
 
 class Users extends Component<Props, State> {
@@ -110,6 +127,10 @@ class Users extends Component<Props, State> {
             isAboutDialogOpen: false,
             isUserFieldsDialogOpen: false,
             userFields: [],
+            userPurchases: [],
+            userClaims: [],
+            isUserClaimsDialogOpen: false,
+            isUserPurchasesDialogOpen: false,
         };
     }
 
@@ -306,6 +327,46 @@ class Users extends Component<Props, State> {
             });
     }
 
+    getUserPurchases(userId: string) {
+        const url = mainServer + userPurchases + "/" + userId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    let userPurchases: PurchaseDto[] = response.data.entities[0];
+                    this.setState({userPurchases: userPurchases});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getUserClaims(userId: string) {
+        const url = mainServer + userClaims + "/" +userId;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    let userClaims: ClaimDto[] = response.data.entities[0];
+                    this.setState({userClaims: userClaims});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     handleTenantSelectChange(event: SelectChangeEvent) {
         this.setState({selectedTenant: event.target.value, selectedRegionId: '', selectedDistrictId: '',
                              selectedVillageId: '', districts: [], villages: []});
@@ -417,8 +478,38 @@ class Users extends Component<Props, State> {
         }
     }
 
+    onClickUserPurchasesButton(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState({isUserPurchasesDialogOpen: true});
+        const selectedUserId = parseInt(e.currentTarget.value);
+        const {users} = this.state;
+        const selectedUser = users.find(user => user.sequence === selectedUserId);
+        if (selectedUser) {
+            this.setState({selectedUser: selectedUser});
+            this.getUserPurchases(selectedUser.insuranceNumber);
+        }
+    }
+
+    onClickUserClaimsButton(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState({isUserClaimsDialogOpen: true});
+        const selectedUserId = parseInt(e.currentTarget.value);
+        const {users} = this.state;
+        const selectedUser = users.find(user => user.sequence === selectedUserId);
+        if (selectedUser) {
+            this.setState({selectedUser: selectedUser});
+            this.getUserClaims(selectedUser.insuranceNumber);
+        }
+    }
+
     onClickUserFieldDialogClose() {
         this.setState({isUserFieldsDialogOpen: false});
+    }
+
+    onClickUserPurchasesDialogClose() {
+        this.setState({isUserPurchasesDialogOpen: false});
+    }
+
+    onClickUserClaimsDialogClose() {
+        this.setState({isUserClaimsDialogOpen: false});
     }
 
     render() {
@@ -427,7 +518,7 @@ class Users extends Component<Props, State> {
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 dateOfBirth, extraInfo, phoneNumber,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal,
-                selectedUser, userFields} = this.state;
+                selectedUser, userFields, userPurchases, userClaims} = this.state;
 
         const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
         return (
@@ -550,8 +641,8 @@ class Users extends Component<Props, State> {
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <Button value={usr.sequence} onClick={(event) =>{this.onClickAboutButton(event);}}><InfoIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserFieldsButton(event)}}><SatelliteAltIcon/></Button>
-                                                <Button value={usr.sequence}><AddCardIcon/></Button>
-                                                <Button value={usr.sequence}><AssistantDirectionIcon/></Button>
+                                                <Button value={usr.sequence} onClick={(event) => {this.onClickUserPurchasesButton(event)}}><AddCardIcon/></Button>
+                                                <Button value={usr.sequence} onClick={(event) => {this.onClickUserClaimsButton(event)}}><AssistantDirectionIcon/></Button>
                                                 <Button value={usr.sequence}><DeleteIcon/></Button>
                                             </Stack>
                                         </TableCell>
@@ -808,6 +899,7 @@ class Users extends Component<Props, State> {
                 <Dialog open={this.state.isUserFieldsDialogOpen} maxWidth="md">
                     <DialogTitle>User Fields</DialogTitle>
                     <DialogContent>
+                        {userFields.length !== 0 ?
                         <List dense sx={{width: '100%', color: 'background.paper'}}>
                             {userFields.map((field) => {
                                return (
@@ -851,10 +943,90 @@ class Users extends Component<Props, State> {
                                     </Grid>
                                 </Paper>)
                             })}
-                        </List>
+                        </List> : "No User Fields"}
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() =>{this.onClickUserFieldDialogClose();}}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={this.state.isUserPurchasesDialogOpen} maxWidth="md">
+                    <DialogTitle>User Purchases</DialogTitle>
+                    <DialogContent>
+                        {userPurchases.length !== 0 ?
+                        <List dense sx={{width: '100%', color: 'background.paper'}}>
+                            {userPurchases.map((purchase) => {
+                                return (
+                                    <Paper style={{padding: 5, margin: 5}}>
+                                        <Grid container spacing={1}>
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Farmer Name:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.farmerName}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>User Name:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.username}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Phone:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.phoneNumber}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Crop:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.cropName}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Field:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.fieldName}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Hectare:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.hectares}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Date:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.date}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Status:</Typography></Grid>
+                                            <Grid item xs={3}>{purchase.status}</Grid>
+                                        </Grid>
+                                    </Paper>)
+                            })}
+                        </List> : "No User Purchases" }
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() =>{this.onClickUserPurchasesDialogClose();}}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={this.state.isUserClaimsDialogOpen} maxWidth="md">
+                    <DialogTitle>User Claims</DialogTitle>
+                    <DialogContent>
+                        {userClaims.length !== 0 ?
+                        <List dense sx={{width: '100%', color: 'background.paper'}}>
+                            {
+                                userClaims.map((claim) => {
+                                return (
+                                    <Paper style={{padding: 5, margin: 5}}>
+                                        <Grid container spacing={1}>
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Farmer Name:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.farmerName}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>User Name:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.username}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Phone:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.farmerPhone}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Crop:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.cropType}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Field:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.fieldName}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Date:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.date}</Grid>
+
+                                            <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Status:</Typography></Grid>
+                                            <Grid item xs={3}>{claim.status}</Grid>
+                                        </Grid>
+                                    </Paper>)
+                            })}
+                        </List> : "No User Claims"}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() =>{this.onClickUserClaimsDialogClose();}}>Close</Button>
                     </DialogActions>
                 </Dialog>
             </Grid>

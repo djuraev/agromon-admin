@@ -18,4 +18,8 @@ export const metric = "/metric/metric";
 export const villageMetrics = "/village-metric/village"
 export const districtMetrics = "/district-metric/metric"
 export const villageFields = "/field/fields";
+export const userClaims = "/claim/claims";
+export const userPurchases = "/purchase/purchases";
+export const districtMetrics2 = "/district-metric/metrics";
+export const villageMetrics2= "/village-metric/metrics";
 

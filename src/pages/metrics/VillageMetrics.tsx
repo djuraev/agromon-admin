@@ -16,14 +16,21 @@ import TenantDto from '../../data-model/TenantDto';
 import RegionDto from '../../data-model/RegionDto';
 import DistrictDto from '../../data-model/DistrictDto';
 import VillageDto from '../../data-model/VillageDto';
-import {districts, mainServer, regions, tenant, villageMetrics, villages} from '../../config/mainConfig';
+import {
+    districtMetrics2,
+    districts,
+    mainServer,
+    regions,
+    tenant,
+    villageMetrics, villageMetrics2,
+    villages
+} from '../../config/mainConfig';
 import axios from 'axios';
 import VillageMetricDto from '../../data-model/VillageMetricDto';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import DistrictMetricDto from '../../data-model/DistrictMetricDto';
 
 const papaparseOptions = {
     header: true,
@@ -195,17 +202,20 @@ class VillageMetrics extends Component<Props, State> {
 
     handleForce (data: any[], fileInfo: IFileInfo) {
         this.setState({csvFilePath: fileInfo.name});
-        let villages: any[] = [];
+        let metrics: any[] = [];
         for (let i=0; i<data.length; i++) {
-            const village = {
-                'tenantId' : data[i].tenantid,
-                'districtSequence': data[i].districtid,
-                'name' : data[i].villagename,
-                'coordinates': data[i].latlong,
-                'names': []
+            const metric = {
+                'cropId' : data[i].cropid,
+                'cropName': data[i].cropname,
+                'villageId' : data[i].villageid,
+                'metricId': data[i].metricid,
+                'metricName': data[i].metricname,
+                'year': data[i].year,
+                'value': data[i].value
             };
-            villages.push(village);
+            metrics.push(metric);
         }
+        this.setState({postMetrics: metrics});
         //this.setState({postVillages: villages});
     }
 
@@ -361,8 +371,7 @@ class VillageMetrics extends Component<Props, State> {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        /*onClick={(event) => {this.uploadVillages()}}>*/
-                                    >
+                                        onClick={(event) => {this.uploadVillages()}}>
                                         <CloudUploadIcon/>
                                         &nbsp;&nbsp;Upload
                                     </Button>
@@ -382,7 +391,7 @@ class VillageMetrics extends Component<Props, State> {
                     <DialogTitle>Parsed Villages</DialogTitle>
                     <DialogContent>
                         <TableContainer>
-                            <Table aria-label="simple table">
+                            <Table aria-label="simple table" stickyHeader>
                                 <TableHead style={{backgroundColor: 'whitesmoke'}}>
                                     <TableRow>
                                         <TableCell align="center">Crop Id</TableCell>
@@ -425,6 +434,26 @@ class VillageMetrics extends Component<Props, State> {
                 </Dialog>
             </Grid>
         );
+    }
+
+    private uploadVillages() {
+        const {postMetrics} = this.state;
+        if (postMetrics.length === 0) {
+            alert("No Village Metrics. Please, select .csv file which contains metrics.");
+            return;
+        }
+
+        const url = mainServer + villageMetrics2;
+        axios.post(url, postMetrics)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage);
+                }
+                else {
+                    alert("District Metrics successfully saved.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
     }
 }
 

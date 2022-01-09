@@ -17,7 +17,15 @@ import {
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import {districtMetrics, districts, mainServer, regions, tenant, villageMetrics} from '../../config/mainConfig';
+import {
+    districtMetrics,
+    districtMetrics2,
+    districts,
+    mainServer,
+    regions,
+    tenant,
+    villages2
+} from '../../config/mainConfig';
 import axios from 'axios';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import PreviewIcon from '@mui/icons-material/Preview';
@@ -164,19 +172,42 @@ class DistrictMetrics extends Component<Props, State> {
 
     handleForce (data: any[], fileInfo: IFileInfo) {
         this.setState({csvFilePath: fileInfo.name});
-        let villages: any[] = [];
+        let metrics: any[] = [];
         for (let i=0; i<data.length; i++) {
-            const village = {
-                'tenantId' : data[i].tenantid,
-                'districtSequence': data[i].districtid,
-                'name' : data[i].villagename,
-                'coordinates': data[i].latlong,
-                'names': []
+            const metric = {
+                'cropId' : data[i].cropid,
+                'cropName': data[i].cropname,
+                'districtId' : data[i].districtid,
+                'metricId': data[i].metricid,
+                'metricName': data[i].metricname,
+                'year': data[i].year,
+                'value': data[i].value
             };
-            villages.push(village);
+            metrics.push(metric);
         }
-        //this.setState({postVillages: villages});
+        this.setState({postMetrics: metrics});
     }
+
+    uploadDistrictMetrics() {
+        const {postMetrics} = this.state;
+        if (postMetrics.length === 0) {
+            alert("No District Metrics. Please, select .csv file which contains metrics.");
+            return;
+        }
+
+        const url = mainServer + districtMetrics2;
+        axios.post(url, postMetrics)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage);
+                }
+                else {
+                    alert("District Metrics successfully saved.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
+    }
+
 
     handlePreviewButtonClick() {
         this.setState({isPreviewOpen: true});
@@ -255,9 +286,9 @@ class DistrictMetrics extends Component<Props, State> {
                     </Grid>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} style={{marginTop: 20}}>
-                        <Table aria-label="custom pagination table">
-                            <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 500}}>
+                        <Table aria-label="custom pagination table" stickyHeader>
+                            <TableHead>
                                 <TableRow>
                                     <TableCell align="center">Crop </TableCell>
                                     <TableCell align="center">Metric</TableCell>
@@ -314,7 +345,7 @@ class DistrictMetrics extends Component<Props, State> {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        /*onClick={(event) => {this.uploadVillages()}}>*/
+                                        onClick={(event) => {this.uploadDistrictMetrics()}}
                                     >
                                         <CloudUploadIcon/>
                                         &nbsp;&nbsp;Upload

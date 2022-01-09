@@ -218,22 +218,6 @@ class Villages extends Component<Props, State> {
         this.getDistrictVillages(selectedValue, false);
     }
 
-    processCSVFile() {
-       /* const {csvFile} = this.state;
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            // @ts-ignore
-            if (event.target.result !== null ) {
-                // @ts-ignore
-                const text = event.target.result;
-                const delim= ',';
-                const headers = text.slice(0, text.indexOf('\n')).split(delim);
-                const rows = str.slice(str.indexOf('\n')+1).split('\n');
-            }
-
-        }*/
-    }
-
     render() {
         const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages} = this.state;
         return (
