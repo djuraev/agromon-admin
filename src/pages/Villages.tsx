@@ -379,7 +379,7 @@ class Villages extends Component<Props, State> {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {postVillages.map((village) => (
+                                    { postVillages.map((village) => (
                                         <TableRow
                                             key={village.tenantId}
                                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}

@@ -42,6 +42,10 @@ class Purchases extends Component<Props, State> {
         }
     }
 
+    getPurchases() {
+
+    }
+
     handleTenantSelectChange(event: SelectChangeEvent) {
         this.setState({selectedTenant: event.target.value});
     }

@@ -22,4 +22,5 @@ export const userClaims = "/claim/claims";
 export const userPurchases = "/purchase/purchases";
 export const districtMetrics2 = "/district-metric/metrics";
 export const villageMetrics2= "/village-metric/metrics";
+export const userAuth = "/auth/login";
 
