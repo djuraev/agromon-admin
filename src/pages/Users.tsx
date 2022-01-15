@@ -621,7 +621,8 @@ class Users extends Component<Props, State> {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {users.map((usr, idx) => (
+                                {
+                                    users.map((usr, idx) => (
 
                                     <TableRow
                                         key={usr.sequence}
