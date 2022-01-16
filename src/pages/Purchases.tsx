@@ -16,6 +16,10 @@ import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSha
 import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import TenantDto from '../data-model/TenantDto';
 import PurchaseDto from '../data-model/PurchaseDto';
+import AccountDto from '../data-model/AccountDto';
+import LocalStorageHelper from '../helper/LocalStorageHelper';
+import {mainServer, tenant} from '../config/mainConfig';
+import axios from 'axios';
 
 interface Props {
 
@@ -28,6 +32,8 @@ interface State {
     tenants: TenantDto[];
     selectedTenant: string;
     purchases: PurchaseDto[];
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;
 }
 
 class Purchases extends Component<Props, State> {
@@ -39,11 +45,62 @@ class Purchases extends Component<Props, State> {
             purchases: [],
             rowsPerPage: 10,
             page: 0,
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         }
     }
 
-    getPurchases() {
+    componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
+        this.getTenants();
+        if (currentUser.adminType === "SUPER") {
 
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+        }
+    }
+
+    getTenants() {
+        const url = mainServer + tenant + "/tenants";
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({tenants: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+
+    getPurchases(tenantId: string) {
+        const url = mainServer + tenant + "/tenants";
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({purchases: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
     }
 
     handleTenantSelectChange(event: SelectChangeEvent) {

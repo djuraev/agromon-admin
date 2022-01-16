@@ -23,6 +23,8 @@ import VillageDto from '../../data-model/VillageDto';
 import {districts, mainServer, regions, tenant, villageFields, villages} from '../../config/mainConfig';
 import axios from 'axios';
 import FieldDto from '../../data-model/FieldDto';
+import AccountDto from '../../data-model/AccountDto';
+import LocalStorageHelper from '../../helper/LocalStorageHelper';
 
 interface State {
     rowsPerPage: number;
@@ -39,6 +41,8 @@ interface State {
     selectedVillageId: string;
     //
     fields: FieldDto[];
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;
 }
 
 interface Props {
@@ -62,11 +66,24 @@ class FieldList extends React.Component<Props, State> {
             villages: [],
             selectedVillageId: '',
             fields: [],
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         };
     }
 
     componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
         this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+            this.getTenantRegions(currentUser.tenantId);
+        }
     }
 
     handleTenantSelectChange(event: SelectChangeEvent) {
@@ -203,7 +220,7 @@ class FieldList extends React.Component<Props, State> {
 
     render() {
         const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
-            districts, selectedDistrictId, villages, selectedVillageId, fields} = this.state;
+            districts, selectedDistrictId, villages, selectedVillageId, fields, isTenantSelectDisabled} = this.state;
 
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
@@ -217,6 +234,7 @@ class FieldList extends React.Component<Props, State> {
                                 labelId="countrySelectLabel"
                                 id="countrySelect"
                                 value={selectedTenant}
+                                disabled={isTenantSelectDisabled}
                                 label="Country"
                                 onChange={(event) => {this.handleTenantSelectChange(event)}}
                             >
@@ -336,7 +354,7 @@ class FieldList extends React.Component<Props, State> {
                                 <TablePagination
                                     rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
                                     colSpan={3}
-                                    count={100}
+                                    count={-1}
                                     rowsPerPage={rowsPerPage}
                                     page={page}
                                     SelectProps={{

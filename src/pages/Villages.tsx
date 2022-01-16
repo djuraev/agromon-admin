@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {
-    Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogTitle, Divider,
+    Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogTitle,
     FormControl,
     Grid,
     InputLabel,
@@ -14,7 +14,7 @@ import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSha
 import TenantDto from '../data-model/TenantDto';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
-import {districts, mainServer, regions, tenant, user, villages, villages2} from '../config/mainConfig';
+import {districts, mainServer, regions, tenant, villages, villages2} from '../config/mainConfig';
 import axios from 'axios';
 import VillageDto from '../data-model/VillageDto';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
@@ -22,6 +22,8 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import AccountDto from '../data-model/AccountDto';
+import LocalStorageHelper from '../helper/LocalStorageHelper';
 
 const papaparseOptions = {
     header: true,
@@ -45,6 +47,8 @@ interface State {
     csvFilePath: string;
     postVillages: any[];
     isVillagesPreviewOpen: boolean;
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;
 }
 
 class Villages extends Component<Props, State> {
@@ -62,11 +66,24 @@ class Villages extends Component<Props, State> {
             csvFilePath: '',
             postVillages: [],
             isVillagesPreviewOpen: false,
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         }
     }
 
     componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
         this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId.toString()});
+            this.setState({isTenantSelectDisabled: true})
+            this.getTenantRegions(currentUser.tenantId, false);
+        }
     }
 
     handleForce (data: any[], fileInfo: IFileInfo) {
@@ -219,7 +236,8 @@ class Villages extends Component<Props, State> {
     }
 
     render() {
-        const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages} = this.state;
+        const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages,
+                isTenantSelectDisabled} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
                 <Grid item xs={1}/>
@@ -234,6 +252,7 @@ class Villages extends Component<Props, State> {
                                         labelId="countrySelectLabel"
                                         id="countrySelect"
                                         label="Country"
+                                        disabled={isTenantSelectDisabled}
                                         value={selectedTenant}
                                         onChange={(event) => {this.handleTenantSelectChange(event)}}
                                         >
@@ -306,9 +325,9 @@ class Villages extends Component<Props, State> {
                                             key={village.sequence}
                                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                         >
-                                            <TableCell align="center">{selectedTenant}</TableCell>
-                                            <TableCell align="center">{selectedRegion}</TableCell>
-                                            <TableCell align="center">{selectedDistrict}</TableCell>
+                                            <TableCell align="center">{village.country}</TableCell>
+                                            <TableCell align="center">{village.regionName}</TableCell>
+                                            <TableCell align="center">{village.districtName}</TableCell>
                                             <TableCell align="center">{village.name}</TableCell>
                                             <TableCell align="center"><Button><AssistantDirectionIcon/></Button></TableCell>
                                         </TableRow>

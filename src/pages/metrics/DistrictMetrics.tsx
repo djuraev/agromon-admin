@@ -30,6 +30,8 @@ import axios from 'axios';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AccountDto from '../../data-model/AccountDto';
+import LocalStorageHelper from '../../helper/LocalStorageHelper';
 
 
 const papaparseOptions = {
@@ -54,6 +56,9 @@ interface State {
     csvFilePath: string;
     isPreviewOpen: boolean;
     postMetrics: DistrictMetricDto[];
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;
+
 }
 class DistrictMetrics extends Component<Props, State> {
     //
@@ -70,11 +75,24 @@ class DistrictMetrics extends Component<Props, State> {
             csvFilePath: '',
             isPreviewOpen: false,
             postMetrics: [],
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         }
     }
 
     componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
         this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+            this.getTenantRegions(currentUser.tenantId);
+        }
     }
 
     getTenants() {
@@ -215,7 +233,7 @@ class DistrictMetrics extends Component<Props, State> {
 
     render() {
         const {tenants, selectedTenant, regions, selectedRegionId, districts, selectedDistrictId, districtMetrics,
-                isPreviewOpen, postMetrics, csvFilePath} = this.state;
+                isPreviewOpen, postMetrics, csvFilePath, isTenantSelectDisabled} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -228,6 +246,7 @@ class DistrictMetrics extends Component<Props, State> {
                                     labelId="countrySelectLabel"
                                     id="countrySelect"
                                     value={selectedTenant}
+                                    disabled={isTenantSelectDisabled}
                                     label="Country"
                                     onChange={(event) => {this.handleTenantSelectChange(event)}}
                                 >

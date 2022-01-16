@@ -152,8 +152,8 @@ class Tenants extends Component<Props, State> {
         const {currentLat, currentLong} = this.state;
         return (
           <Grid container spacing={2}>
-              <Grid item xs={12} style={{textAlign: 'center', backgroundColor: 'red', margin: 20}}>
-                  <h3>Tenants Info</h3>
+              <Grid item xs={12} style={{textAlign: 'center', backgroundColor: '#005f73', margin: 20}}>
+                  <h2>Tenants Info</h2>
               </Grid>
               <Grid item xs={4}>
                   <TableContainer sx={{ maxWidth: 500, maxHeight: 600}} aria-label="sticky table">

@@ -16,6 +16,8 @@ import {districts, mainServer, newDistrict, newRegion, regions, tenant} from '..
 import axios from 'axios';
 import RegionDto from '../data-model/RegionDto';
 import DistrictDto from '../data-model/DistrictDto';
+import LocalStorageHelper from '../helper/LocalStorageHelper';
+import AccountDto from '../data-model/AccountDto';
 
 interface Props {
 
@@ -38,6 +40,8 @@ interface State {
     regionsModal2: RegionDto[];
     regionNameModal1: string;
     addNewDistrictText: string;
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;
 }
 class RegionDistricts extends Component<Props, State> {
     //
@@ -60,12 +64,25 @@ class RegionDistricts extends Component<Props, State> {
             districts: [],
             regionNameModal1: '',
             addNewDistrictText: '',
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         };
     }
 
     componentDidMount() {
         //
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
         this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedCountry: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+            this.getTenantRegions(currentUser.tenantId, 'false');
+        }
     }
 
     getTenants() {
@@ -214,7 +231,7 @@ class RegionDistricts extends Component<Props, State> {
     }
 
     render() {
-        const {selectedTenantModal1, tenantsModal1, selectedTenantModal2, regionsModal1, countries, regions, selectedRegion, selectedCountry,
+        const {selectedTenantModal1, tenantsModal1, selectedTenantModal2, isTenantSelectDisabled, countries, regions, selectedRegion, selectedCountry,
                 districts, regionsModal2} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
@@ -230,6 +247,7 @@ class RegionDistricts extends Component<Props, State> {
                                         labelId="countrySelectLabel"
                                         id="countrySelect"
                                         label="Country"
+                                        disabled={isTenantSelectDisabled}
                                         value={selectedCountry}
                                         onChange={(event) => {this.handleTenantSelectChange(event)}}
                                     >
@@ -282,8 +300,8 @@ class RegionDistricts extends Component<Props, State> {
                                             key={district.sequence}
                                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                         >
-                                            <TableCell align="center">{selectedCountry}</TableCell>
-                                            <TableCell align="center">{selectedRegion}</TableCell>
+                                            <TableCell align="center">{district.country}</TableCell>
+                                            <TableCell align="center">{district.regionName}</TableCell>
                                             <TableCell align="center">{district.name} [{district.sequence}]</TableCell>
                                         </TableRow>
                                     ))}
@@ -303,18 +321,29 @@ class RegionDistricts extends Component<Props, State> {
                             <Grid item xs={3} style={{alignContent: 'center'}}>
                                 <Button style={{width: 200}}
                                         variant="outlined"
+                                        disabled={isTenantSelectDisabled}
                                         onClick={() => {this.setState({isAddNewRegionOpen: true})}}>+ Add Region</Button>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <Button style={{width: 200}} variant="outlined">+ Add Region Name</Button>
                             </Grid>
                             <Grid item xs={3}>
                                 <Button style={{width: 200}}
                                         variant="outlined"
+                                        disabled={isTenantSelectDisabled}
+                                >+ Add Region Name</Button>
+                            </Grid>
+                            <Grid item xs={3}>
+                                <Button style={{width: 200}}
+                                        variant="outlined"
+                                        disabled={isTenantSelectDisabled}
                                         onClick={() => {this.setState({isAddNewDistrictOpen: true})}}>+ Add District</Button>
                             </Grid>
                             <Grid item xs={3}>
-                                <Button style={{width: 200, paddingLeft: 20}} variant="outlined">+ Add District Name</Button>
+                                <Button
+                                    style={{width: 200, paddingLeft: 20}}
+                                    variant="outlined"
+                                    disabled={isTenantSelectDisabled}
+                                >
+                                    + Add District Name
+                                </Button>
                             </Grid>
                         </Grid>
                 </Grid>

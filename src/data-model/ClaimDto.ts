@@ -11,6 +11,8 @@ class ClaimDto {
     description: string = '';
     status: string = '';
     date: string = '';
+
+
 }
 
 export default ClaimDto;

@@ -16,6 +16,10 @@ import {
 import AddCardIcon from '@mui/icons-material/AddCard';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
+import AccountDto from '../data-model/AccountDto';
+import LocalStorageHelper from '../helper/LocalStorageHelper';
+import {mainServer, tenant} from '../config/mainConfig';
+import axios from 'axios';
 
 interface Props {
 
@@ -28,8 +32,8 @@ interface State {
     //
     tenants: TenantDto[];
     selectedTenant: string;
-
-}
+    currentUser: AccountDto;
+    isTenantSelectDisabled: boolean;}
 
 class Claims extends Component<Props, State> {
     constructor(props: Props) {
@@ -40,7 +44,42 @@ class Claims extends Component<Props, State> {
             selectedTenant: '',
             rowsPerPage: 10,
             page: 0,
+            currentUser: AccountDto.sample(),
+            isTenantSelectDisabled: false,
         }
+    }
+
+    componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
+        this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+        }
+    }
+
+    getTenants() {
+        const url = mainServer + tenant + "/tenants";
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({tenants: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
     }
 
     handleTenantSelectChange(event: SelectChangeEvent) {
@@ -61,7 +100,7 @@ class Claims extends Component<Props, State> {
     }
 
     render() {
-        const {selectedTenant, tenants, claims,rowsPerPage, page} = this.state;
+        const {selectedTenant, tenants, claims,rowsPerPage, page, isTenantSelectDisabled} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
             <Grid item xs={12}>
@@ -74,6 +113,7 @@ class Claims extends Component<Props, State> {
                                 labelId="countrySelectLabel"
                                 id="countrySelect"
                                 value={selectedTenant}
+                                disabled={isTenantSelectDisabled}
                                 label="Country"
                                 onChange={(event) => {this.handleTenantSelectChange(event)}}
                             >

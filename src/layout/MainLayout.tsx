@@ -1,7 +1,16 @@
 import React, {Component} from 'react';
 import { ProSidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
-import {Box, Button, Dialog, DialogActions, DialogContent, Grid, Paper, TextField} from '@mui/material';
+import {
+    Box,
+    Button,
+    ButtonGroup,
+    Dialog, DialogActions,
+    DialogContent,
+    Grid,
+    TextField,
+} from '@mui/material';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import PublicRoundedIcon from '@mui/icons-material/PublicRounded';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -37,14 +46,16 @@ import Claims from '../pages/Claims';
 import InfoEditor from '../pages/InfoEditor';
 import LocalStorageHelper from '../helper/LocalStorageHelper';
 import {mainServer, tenant, userAuth} from '../config/mainConfig';
-import axios from 'axios';
-import UserDto from '../data-model/UserDto';
+import axios, {AxiosError} from 'axios';
+import AccountDto from '../data-model/AccountDto';
+import Dashboard from '../pages/dashboard';
 
 interface State {
     username: string;
     password: string;
     isLoginModalOpen: boolean;
-    currentUser: UserDto;
+    accountInfo: AccountDto;
+    isProfileDialogOpen: boolean;
 }
 
 interface Props {
@@ -59,13 +70,17 @@ class MainLayout extends Component<Props, State> {
             username: '',
             password: '',
             isLoginModalOpen: true,
-            currentUser: UserDto.of(),
+            accountInfo: AccountDto.sample(),
+            isProfileDialogOpen: false,
         }
     }
 
     componentDidMount() {
         if (this.isUserLoggedIn()) {
             this.setState({isLoginModalOpen: false});
+            const user = LocalStorageHelper.getItem("currentUser");
+            const currentUser = JSON.parse(user);
+            this.setState({accountInfo: currentUser});
         }
     }
 
@@ -76,20 +91,29 @@ class MainLayout extends Component<Props, State> {
             "username": username,
             "password": password
         };
+
         axios
             .post(url, userInfo)
             .then(response => {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
-                    this.setState({currentUser: response.data.entities[0], isLoginModalOpen: false});
-                    LocalStorageHelper.setItem("isLoggedIn", "SEYYES")
+                    const currentUser = response.data.entities[0];
+                    this.setState({accountInfo: currentUser, isLoginModalOpen: false});
+                    LocalStorageHelper.setItem("isLoggedIn", "SEYYES");
+                    LocalStorageHelper.setItem("currentUser", JSON.stringify(currentUser));
+                    window.location.reload();
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
             })
-            .catch(error => {
-                alert(error);
-            });
+            .catch((error: AxiosError) => {
+                if (error.response!.status === 404) {
+                    alert("Username/password error.");
+                }
+                else {
+                    alert(error.message)
+                }
+            })
     }
 
     loginButtonClickHandle() {
@@ -107,6 +131,7 @@ class MainLayout extends Component<Props, State> {
         const response = confirm("Would you like to logout now?");
         if (response) {
             LocalStorageHelper.removeItem("isLoggedIn");
+            LocalStorageHelper.removeItem("currentUser");
             this.setState({isLoginModalOpen: true});
         }
 
@@ -120,8 +145,12 @@ class MainLayout extends Component<Props, State> {
         this.setState({password: event.target.value});
     }
 
+    handleProfileViewClick () {
+        this.setState({isProfileDialogOpen: true});
+    }
+
     render() {
-        const {isLoginModalOpen} = this.state;
+        const {isLoginModalOpen, accountInfo} = this.state;
         return (
             <Grid container style={{paddingTop: 10, paddingLeft: 10, paddingRight: 10}}>
                 <BrowserRouter>
@@ -130,10 +159,16 @@ class MainLayout extends Component<Props, State> {
                 </Grid>
                 <Grid item xs={10} style={{backgroundColor: '#202020'}}>
                     <Box display="flex" justifyContent="flex-end">
-                        <Button style={{backgroundColor: '#304050', margin: 15, width: 30}}
+                        <ButtonGroup style={{backgroundColor: '#304050', marginRight: 10, marginTop: 20}}>
+                        <Button
+                                onClick={(event) => {this.handleProfileViewClick()}}>
+                            <AccountCircleIcon/>
+                        </Button>
+                        <Button
                             onClick={(event) => {this.handleLogOutButtonClick()}}>
                             <ExitToAppIcon/>
                         </Button>
+                        </ButtonGroup>
                     </Box>
                 </Grid>
                 <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
@@ -217,9 +252,9 @@ class MainLayout extends Component<Props, State> {
                 </Grid>
                 <Grid item xs={10} style={{height: '95vh'}}>
                         <Switch>
-                            {/*<Route path='/dashboard'>
+                            <Route path='/dashboard'>
                                 <Dashboard/>
-                            </Route>*/}
+                            </Route>
                             <Route path='/tenants'>
                                 <Tenants/>
                             </Route>
@@ -306,8 +341,32 @@ class MainLayout extends Component<Props, State> {
                             </Grid>
                     </DialogContent>
                 </Dialog>
+                <Dialog open={this.state.isProfileDialogOpen} >
+                    <DialogContent>
+                        <Grid container>
+                            <Grid item xs={6}>Name</Grid>
+                            <Grid item xs={6}>{accountInfo.name}</Grid>
+                            <Grid item xs={6}>Surname</Grid>
+                            <Grid item xs={6}>{accountInfo.surname}</Grid>
+                            <Grid item xs={6}>Username</Grid>
+                            <Grid item xs={6}>{accountInfo.username}</Grid>
+                            <Grid item xs={6}>Admin Type</Grid>
+                            <Grid item xs={6}>{accountInfo.adminType}</Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={() => {this.onClickProfileDialogOk()}}>
+                            OK
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Grid>
         );
+    }
+
+    private onClickProfileDialogOk() {
+        this.setState({isProfileDialogOpen: false});
     }
 
     private handCancelButtonClick() {

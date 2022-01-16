@@ -8,6 +8,7 @@ export const villages = "/tenant/village/village";
 export const villages2 = "/tenant/village/villages";
 export const user = "/user/user";
 export const users = "/user/users";
+export const usersDynamic = "/user/user/dynamic";
 export const crops = "/crop/crops";
 export const crop = "/crop/crop";
 export const newRegion = "/tenant/region/region";
@@ -23,4 +24,5 @@ export const userPurchases = "/purchase/purchases";
 export const districtMetrics2 = "/district-metric/metrics";
 export const villageMetrics2= "/village-metric/metrics";
 export const userAuth = "/auth/login";
+export const purchases = "";
 

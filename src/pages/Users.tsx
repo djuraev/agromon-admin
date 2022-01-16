@@ -29,7 +29,7 @@ import {
     user,
     userClaims,
     userPurchases,
-    users,
+    users, usersDynamic,
     villages
 } from '../config/mainConfig';
 import TenantDto from '../data-model/TenantDto';
@@ -40,6 +40,8 @@ import UserDto from '../data-model/UserDto';
 import FieldDto from '../data-model/FieldDto';
 import PurchaseDto from '../data-model/PurchaseDto';
 import ClaimDto from '../data-model/ClaimDto';
+import LocalStorageHelper from '../helper/LocalStorageHelper';
+import AccountDto from '../data-model/AccountDto';
 
 interface Props {
 
@@ -48,6 +50,7 @@ interface Props {
 interface State {
     rowsPerPage: number;
     page: number;
+    totalPages: number;
     isAddUserDialogOpen: boolean;
     //
     tenants: TenantDto[];
@@ -87,6 +90,9 @@ interface State {
     userPurchases: PurchaseDto[];
     isUserClaimsDialogOpen: boolean;
     userClaims: ClaimDto[];
+    currentUser: AccountDto;
+    userCount: number;
+    isTenantSelectDisabled: boolean;
 }
 
 class Users extends Component<Props, State> {
@@ -96,6 +102,7 @@ class Users extends Component<Props, State> {
         this.state = {
             rowsPerPage: 10,
             page: 0,
+            totalPages: 0,
             isAddUserDialogOpen: false,
             tenants: [],
             selectedTenant: '',
@@ -131,11 +138,25 @@ class Users extends Component<Props, State> {
             userClaims: [],
             isUserClaimsDialogOpen: false,
             isUserPurchasesDialogOpen: false,
+            currentUser: AccountDto.sample(),
+            userCount: 0,
+            isTenantSelectDisabled: false,
         };
     }
 
     componentDidMount() {
+        const user = LocalStorageHelper.getItem("currentUser");
+        const currentUser = JSON.parse(user);
+        this.setState({currentUser: currentUser});
         this.getTenants();
+        if (currentUser.adminType === "SUPER") {
+
+        }
+        else {
+            this.setState({selectedTenant: currentUser.tenantId, selectedTenantModal: currentUser.tenantId});
+            this.setState({isTenantSelectDisabled: true})
+            this.getTenantRegions(currentUser.tenantId, false);
+        }
     }
 
     setAddUserDialog(isOpen: boolean) {
@@ -144,7 +165,12 @@ class Users extends Component<Props, State> {
 
     onAddNewUserClick() {
         //this.getTenants();
+
         this.setAddUserDialog(true);
+        const {currentUser} = this.state;
+        if (currentUser.adminType !== "SUPER") {
+            this.getTenantRegions(currentUser.tenantId.toLocaleString(), true);
+        }
     }
 
     async onClickAddUserDialogSave() {
@@ -190,6 +216,7 @@ class Users extends Component<Props, State> {
 
     handleChangePage(event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) {
         this.setState({page: newPage});
+        this.getUsers();
     }
 
     handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -244,7 +271,7 @@ class Users extends Component<Props, State> {
     }
 
     getDistrictVillages(districtId: string | number, isModal: boolean) {
-        const url = mainServer + villages+"/" + districtId;
+        const url = mainServer + villages + "/" + districtId;
         axios({
             url: url,
             method: 'GET',
@@ -288,17 +315,31 @@ class Users extends Component<Props, State> {
     }
 
     getUsers() {
-        const url = mainServer + users;
-        axios({
-            url: url,
-            method: 'GET',
-        })
+
+        const {rowsPerPage, page} = this.state;
+        const url = mainServer + usersDynamic + "/" + page +"/" + rowsPerPage;
+
+        const {selectedTenant, selectedRegionId, selectedDistrictId, selectedVillageId} = this.state;
+        if (!selectedTenant || selectedTenant === '') {
+            alert("Please, select country at least.");
+            return;
+        }
+        const userExample = {
+            "tenantId": selectedTenant,
+            "regionSequence": selectedRegionId,
+            "districtSequence": selectedDistrictId,
+            "villageSequence": selectedVillageId
+        };
+
+        axios.post(url, userExample)
             .then(response => {
                 const requestFailed = response.data.requestFailed;
-                if (!requestFailed) {
+                if (!requestFailed)
+                {
                     let users: UserDto[] = response.data.entities[0];
-                    this.setState({users: users});
-                } else {
+                    this.setState({users: users, totalPages: response.data.totalPages, userCount: response.data.totalCount});
+                }
+                else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
             })
@@ -447,7 +488,7 @@ class Users extends Component<Props, State> {
 
     private onChangeExtraInfo(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({extraInfo: e.target.value});
-        alert(JSON.stringify(e.target.value));
+
     }
 
     private onChangePhoneNumber(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
@@ -518,7 +559,7 @@ class Users extends Component<Props, State> {
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 dateOfBirth, extraInfo, phoneNumber,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal,
-                selectedUser, userFields, userPurchases, userClaims} = this.state;
+                selectedUser, userFields, userPurchases, userClaims, userCount, isTenantSelectDisabled, totalPages} = this.state;
 
         const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
         return (
@@ -534,6 +575,7 @@ class Users extends Component<Props, State> {
                                     id="countrySelect"
                                     value={selectedTenant}
                                     label="Country"
+                                    disabled={isTenantSelectDisabled}
                                     onChange={(event) => {this.handleTenantSelectChange(event)}}
                                 >
                                     {tenants.map((tenant) => (
@@ -616,7 +658,7 @@ class Users extends Component<Props, State> {
                                     <TableCell align="center">Name</TableCell>
                                     <TableCell align="center">Insurance Number</TableCell>
                                     <TableCell align="center">Email</TableCell>
-                                    <TableCell align="center">Country</TableCell>
+                                    <TableCell align="center">Birthday</TableCell>
                                     <TableCell align="center">Operations</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -637,14 +679,14 @@ class Users extends Component<Props, State> {
                                         <TableCell align="center">{usr.name}</TableCell>
                                         <TableCell align="center">{usr.insuranceNumber}</TableCell>
                                         <TableCell align="center">{usr.email}</TableCell>
-                                        <TableCell align="center">{usr.country}</TableCell>
+                                        <TableCell align="center">{usr.dateOfBirth}</TableCell>
                                         <TableCell align="center">
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <Button value={usr.sequence} onClick={(event) =>{this.onClickAboutButton(event);}}><InfoIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserFieldsButton(event)}}><SatelliteAltIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserPurchasesButton(event)}}><AddCardIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserClaimsButton(event)}}><AssistantDirectionIcon/></Button>
-                                                <Button value={usr.sequence}><DeleteIcon/></Button>
+                                               {/* <Button value={usr.sequence}><DeleteIcon/></Button>*/}
                                             </Stack>
                                         </TableCell>
                                     </TableRow>
@@ -653,9 +695,9 @@ class Users extends Component<Props, State> {
                             <TableFooter>
                                 <TableRow>
                                     <TablePagination
-                                        rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
+                                        rowsPerPageOptions={[10, 20, 30]}
                                         colSpan={3}
-                                        count={100}
+                                        count={userCount}
                                         rowsPerPage={rowsPerPage}
                                         page={page}
                                         SelectProps={{
@@ -667,7 +709,7 @@ class Users extends Component<Props, State> {
                                         onPageChange={(e, p) => {
                                             this.handleChangePage(e, p)}}
                                         onRowsPerPageChange={(event) =>this.handleChangeRowsPerPage(event)}
-                                        ActionsComponent={TablePaginationActions}
+
                                     />
                                 </TableRow>
                             </TableFooter>
@@ -700,6 +742,7 @@ class Users extends Component<Props, State> {
                                         labelId="countrySelectLabel"
                                         id="countrySelectModal"
                                         value={selectedTenantModal}
+                                        disabled={isTenantSelectDisabled}
                                         label="Country"
                                         onChange={(event) => {this.handleTenantSelectChangeModal(event)}}
                                     >
