@@ -66,9 +66,9 @@ class Fields extends Component<Props, State> {
         super(props);
         this.state = {
             mapViewStyle: "mapbox://styles/mapbox/satellite-v9",
-            currentLang: null,
-            currentLat: null,
-            zoom: 16,
+            currentLang: 70.264422,
+            currentLat: 40.089145,
+            zoom: 2,
             coordinates: '',
             rawCoordinates: null,
             currentUser: UserDto.of(),
@@ -86,7 +86,7 @@ class Fields extends Component<Props, State> {
     }
 
     componentDidMount() {
-        this.getCurrentLocation();
+        //this.getCurrentLocation();
         this.getAllCrops();
     }
 
