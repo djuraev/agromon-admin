@@ -1,6 +1,7 @@
 //export const mainServer = "http://http://206.81.29.167:8090/api";
 //export const mainServer = "http://localhost:8090/api";
-export const mainServer = "http://http://206.81.29.167:8090/api";
+//export const mainServer = "http://http://206.81.29.167:8090/api";
+export const mainServer = "http://localhost:8090/api";
 export const devServer = "http://localhost:8090/api";
 export const tenant = "/tenant";
 export const newTenant = "/tenant/tenants";
@@ -27,4 +28,5 @@ export const districtMetrics2 = "/district-metric/metrics";
 export const villageMetrics2= "/village-metric/metrics";
 export const userAuth = "/auth/login";
 export const purchases = "";
+export const claim = "/claim";
 

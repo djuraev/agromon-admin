@@ -33,6 +33,7 @@ interface State {
     newTenantCoordinates: string;
     currentLong: number;
     currentLat: number;
+    zoom: number;
 }
 
 
@@ -50,8 +51,9 @@ class Tenants extends Component<Props, State> {
             newTenantCode: '',
             newTenantCapital: '',
             newTenantCoordinates: '',
-            currentLat: 0,
-            currentLong: 0,
+            currentLat: 10,
+            currentLong: 20,
+            zoom: 1,
         }
     }
 
@@ -137,18 +139,18 @@ class Tenants extends Component<Props, State> {
     }
 
     onClickTableRow(tenantId: number) {
-        const {tenants} = this.state;
+        const {tenants, zoom} = this.state;
         const selectedTenant = tenants.find(tenant => tenant.id === tenantId);
         if (selectedTenant) {
             const coordinates = selectedTenant.coordinates.split(":");
             const long = parseFloat(coordinates[0]);
             const lat = parseFloat(coordinates[1]);
-            this.setState({currentLong: lat, currentLat: long});
+            this.setState({currentLong: lat, currentLat: long, zoom: 8});
         }
     }
 
     render() {
-        const { isDialogOpen, tenants, newTenantCapital, newTenantCode, newTenantName, newTenantCoordinates } = this.state;
+        const { isDialogOpen, tenants, newTenantCapital, newTenantCode, newTenantName, newTenantCoordinates, zoom } = this.state;
         const {currentLat, currentLong} = this.state;
         return (
           <Grid container spacing={2}>
@@ -189,6 +191,7 @@ class Tenants extends Component<Props, State> {
                           <Map
                               style="mapbox://styles/mapbox/light-v10" // eslint-disable-line
                               center = {[currentLong, currentLat]}
+                              zoom={[zoom]}
                               containerStyle={{
                                   height: "450px",
                                   width: "800px"

@@ -10,15 +10,14 @@ import {
     Paper,
     Select, SelectChangeEvent, Stack,
     Table, TableBody, TableCell,
-    TableContainer, TableFooter,
-    TableHead, TablePagination, TableRow
+    TableContainer,
+    TableHead, TableRow
 } from '@mui/material';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
-import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import AccountDto from '../data-model/AccountDto';
 import LocalStorageHelper from '../helper/LocalStorageHelper';
-import {mainServer, tenant} from '../config/mainConfig';
+import {claim, mainServer, tenant} from '../config/mainConfig';
 import axios from 'axios';
 
 interface Props {
@@ -33,7 +32,9 @@ interface State {
     tenants: TenantDto[];
     selectedTenant: string;
     currentUser: AccountDto;
-    isTenantSelectDisabled: boolean;}
+    isTenantSelectDisabled: boolean;
+    claimStatus: string;
+}
 
 class Claims extends Component<Props, State> {
     constructor(props: Props) {
@@ -46,6 +47,7 @@ class Claims extends Component<Props, State> {
             page: 0,
             currentUser: AccountDto.sample(),
             isTenantSelectDisabled: false,
+            claimStatus: 'Submitted'
         }
     }
 
@@ -82,16 +84,32 @@ class Claims extends Component<Props, State> {
             });
     }
 
+    getClaims() {
+        const {claimStatus, selectedTenant} = this.state;
+        const url = mainServer + claim + "/claims/" + selectedTenant + "/" + claimStatus;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({claims: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     handleTenantSelectChange(event: SelectChangeEvent) {
         this.setState({selectedTenant: event.target.value});
     }
 
     onClickSearchButton() {
-        //this.getFields();
-    }
-
-    handleChangePage(event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) {
-        this.setState({page: newPage});
+        this.getClaims();
     }
 
     handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -99,12 +117,17 @@ class Claims extends Component<Props, State> {
         this.setState({rowsPerPage: perPage, page: 0});
     }
 
+    handleClaimStatusChange(event: SelectChangeEvent) {
+        this.setState({claimStatus: event.target.value});
+    }
+
     render() {
-        const {selectedTenant, tenants, claims,rowsPerPage, page, isTenantSelectDisabled} = this.state;
+        const {selectedTenant, tenants, claims, isTenantSelectDisabled, claimStatus} = this.state;
+        const claimStatuses = ["Submitted", "Approved", "Rejected"];
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
             <Grid item xs={12}>
-                <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
+                <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0, alignItems: 'center'}}>
                     <Grid item xs={1}/>
                     <Grid item xs={4}>
                         <FormControl fullWidth size={'small'}>
@@ -123,6 +146,23 @@ class Claims extends Component<Props, State> {
                             </Select>
                         </FormControl>
                     </Grid>
+                    <Grid item xs={2}>
+                        <FormControl fullWidth size={'small'}>
+                            <InputLabel id="countrySelectLabel">Status</InputLabel>
+                            <Select
+                                labelId="statusSelectLabel"
+                                id="statusSelect"
+                                value={claimStatus}
+                                label="Status"
+                                onChange={(event) => {this.handleClaimStatusChange(event)}}
+                            >
+                                {claimStatuses.map((status) => (
+                                    <MenuItem value={status}>{status}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={1}/>
                     <Grid item xs={1}>
                         <Button variant="outlined" onClick={() => {this.onClickSearchButton()}} >
                             <LocationSearchingSharpIcon/>
@@ -132,22 +172,25 @@ class Claims extends Component<Props, State> {
                 </Grid>
             </Grid>
             <Grid item xs={12}>
-                <TableContainer component={Paper} style={{marginTop: 20}}>
-                    <Table aria-label="custom pagination table">
+                <TableContainer>
+                    <Table aria-label="simple table" sx={{maxHeight: 500}}>
                         <TableHead style={{backgroundColor: 'whitesmoke'}}>
                             <TableRow>
                                 <TableCell align="center">N</TableCell>
-                                <TableCell align="center">Date</TableCell>
                                 <TableCell align="center">Username</TableCell>
-                                <TableCell align="center">Farmer</TableCell>
-                                <TableCell align="center">Description</TableCell>
+                                <TableCell align="center">Field Name</TableCell>
                                 <TableCell align="center">Crop</TableCell>
-                                <TableCell align="center">Other</TableCell>
+                                <TableCell align="center">Area Ton</TableCell>
+                                <TableCell align="center">Farmer Name</TableCell>
+                                <TableCell align="center">Farmer Phone</TableCell>
+                                <TableCell align="center">Description</TableCell>
+                                <TableCell align="center">Status</TableCell>
+                                <TableCell align="center">Date</TableCell>
+                                <TableCell align="center">Operations</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {claims.map((claim, idx) => (
-
                                 <TableRow
                                     key={claim.sequence}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -156,13 +199,16 @@ class Claims extends Component<Props, State> {
                                         {idx+1}
                                     </TableCell>
                                     <TableCell component="th" scope="row" align="center">
-                                            {claim.date}
+                                            {claim.username}
                                         </TableCell>
-                                        <TableCell align="center">{claim.username}</TableCell>
-                                        <TableCell align="center">{claim.farmerName}</TableCell>
-                                        <TableCell align="center">{claim.description}</TableCell>
+                                        <TableCell align="center">{claim.fieldName}</TableCell>
                                         <TableCell align="center">{claim.cropType}</TableCell>
-
+                                        <TableCell align="center">{claim.areaTon}</TableCell>
+                                        <TableCell align="center">{claim.farmerName}</TableCell>
+                                        <TableCell align="center">{claim.farmerPhone}</TableCell>
+                                        <TableCell align="center">{claim.description}</TableCell>
+                                        <TableCell align="center">{claim.status}</TableCell>
+                                        <TableCell align="center">{claim.date}</TableCell>
                                         <TableCell align="center">
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <Button value={claim.fieldId}><AddCardIcon/></Button>
@@ -171,7 +217,7 @@ class Claims extends Component<Props, State> {
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <TableFooter>
+                        {/*<TableFooter>
                             <TableRow>
                                 <TablePagination
                                     rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
@@ -191,7 +237,7 @@ class Claims extends Component<Props, State> {
                                     ActionsComponent={TablePaginationActions}
                                 />
                             </TableRow>
-                        </TableFooter>
+                        </TableFooter>*/}
                     </Table>
                 </TableContainer>
             </Grid>

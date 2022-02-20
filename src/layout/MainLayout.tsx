@@ -154,24 +154,24 @@ class MainLayout extends Component<Props, State> {
         return (
             <Grid container style={{paddingTop: 10, paddingLeft: 10, paddingRight: 10}}>
                 <BrowserRouter>
-                <Grid item xs={2} style={{height: 80, backgroundColor: '#202020'}}>
-                    <img src={logo} height={80}/>
-                </Grid>
-                <Grid item xs={10} style={{backgroundColor: '#202020'}}>
-                    <Box display="flex" justifyContent="flex-end">
-                        <ButtonGroup style={{backgroundColor: '#304050', marginRight: 10, marginTop: 20}}>
-                        <Button
+                    <Grid item xs={2} style={{height: 80, backgroundColor: '#202020'}}>
+                        <img src={logo} height={80}/>
+                    </Grid>
+                    <Grid item xs={10} style={{backgroundColor: '#202020'}}>
+                        <Box display="flex" justifyContent="flex-end">
+                            <ButtonGroup style={{backgroundColor: '#304050', marginRight: 10, marginTop: 20}}>
+                            <Button
                                 onClick={(event) => {this.handleProfileViewClick()}}>
-                            <AccountCircleIcon/>
-                        </Button>
-                        <Button
-                            onClick={(event) => {this.handleLogOutButtonClick()}}>
-                            <ExitToAppIcon/>
-                        </Button>
-                        </ButtonGroup>
-                    </Box>
-                </Grid>
-                <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
+                                <AccountCircleIcon/>
+                            </Button>
+                            <Button
+                                onClick={(event) => {this.handleLogOutButtonClick()}}>
+                                <ExitToAppIcon/>
+                            </Button>
+                            </ButtonGroup>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
                     <ProSidebar style={{backgroundColor: '#202020'}}>
                             <Menu iconShape="square" style={{alignItems: 'center'}}>
                             <MenuItem icon={<DashboardRoundedIcon />}>
@@ -250,7 +250,7 @@ class MainLayout extends Component<Props, State> {
                         </Menu>
                     </ProSidebar>
                 </Grid>
-                <Grid item xs={10} style={{height: '95vh'}}>
+                    <Grid item xs={10} style={{height: '95vh'}}>
                         <Switch>
                             <Route path='/dashboard'>
                                 <Dashboard/>
