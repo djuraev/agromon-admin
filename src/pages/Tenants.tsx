@@ -214,11 +214,11 @@ class Tenants extends Component<Props, State> {
                       Add New Country</Button>
               </Grid>
               <Grid xs={6} style={{display:'flex', justifyContent:'left', alignItems:'center', paddingTop: 25, paddingLeft: 5}}>
-                  <Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>
+                  {/*<Button style={{width: 250}} variant="outlined" onClick={() => {this.onClickAddNewTenant()}}>
                       <VideoLabelIcon/>
                       &nbsp;&nbsp;
                       Add Country Name
-                  </Button>
+                  </Button>*/}
               </Grid>
               <Dialog open={isDialogOpen} maxWidth="xs">
                   <DialogTitle>Add New Country</DialogTitle>

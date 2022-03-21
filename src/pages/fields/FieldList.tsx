@@ -8,27 +8,25 @@ import {
     Paper,
     Select, SelectChangeEvent, Stack,
     Table, TableBody, TableCell,
-    TableContainer, TableFooter,
-    TableHead, TablePagination, TableRow
+    TableContainer,
+    TableHead, TableRow
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
 import DeleteIcon from '@mui/icons-material/Delete';
-import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import TenantDto from '../../data-model/TenantDto';
 import RegionDto from '../../data-model/RegionDto';
 import DistrictDto from '../../data-model/DistrictDto';
 import VillageDto from '../../data-model/VillageDto';
-import {districts, mainServer, regions, tenant, villageFields, villages} from '../../config/mainConfig';
+import {districts, fieldsDynamic, mainServer, regions, tenant, villageFields, villages} from '../../config/mainConfig';
 import axios from 'axios';
 import FieldDto from '../../data-model/FieldDto';
 import AccountDto from '../../data-model/AccountDto';
 import LocalStorageHelper from '../../helper/LocalStorageHelper';
+import UserDto from '../../data-model/UserDto';
 
 interface State {
-    rowsPerPage: number;
-    page: number;
     isAddUserDialogOpen: boolean;
     //
     tenants: TenantDto[];
@@ -54,8 +52,6 @@ class FieldList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            rowsPerPage: 10,
-            page: 0,
             isAddUserDialogOpen: false,
             tenants: [],
             selectedTenant: '',
@@ -113,27 +109,25 @@ class FieldList extends React.Component<Props, State> {
         this.getFields();
     }
 
-    handleChangePage(event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) {
-        this.setState({page: newPage});
-    }
-
-    handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const perPage = parseInt(event.target.value, 10);
-        this.setState({rowsPerPage: perPage, page: 0});
-    }
-
     getFields() {
-        const {selectedVillageId} = this.state;
-        const url = mainServer + villageFields+"/"+selectedVillageId;
-        axios({
-            url: url,
-            method: 'GET',
-        })
+        const {selectedVillageId, selectedTenant, selectedRegionId, selectedDistrictId} = this.state;
+
+        const fieldExample = {
+            "tenantId": selectedTenant,
+            "regionSequence": selectedRegionId,
+            "districtSequence": selectedDistrictId,
+            "villageSequence": selectedVillageId
+        };
+        const url = mainServer + fieldsDynamic;
+        axios.post(url, fieldExample)
             .then(response => {
                 const requestFailed = response.data.requestFailed;
-                if (!requestFailed) {
-                    this.setState({fields: response.data.entities[0]});
-                } else {
+                if (!requestFailed)
+                {
+                    let fields: FieldDto[] = response.data.entities[0];
+                    this.setState({fields: fields});
+                }
+                else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
             })
@@ -219,7 +213,7 @@ class FieldList extends React.Component<Props, State> {
     }
 
     render() {
-        const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
+        const { tenants, selectedTenant, regions, selectedRegionId,
             districts, selectedDistrictId, villages, selectedVillageId, fields, isTenantSelectDisabled} = this.state;
 
         return (
@@ -349,27 +343,6 @@ class FieldList extends React.Component<Props, State> {
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <TableFooter>
-                            <TableRow>
-                                <TablePagination
-                                    rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
-                                    colSpan={3}
-                                    count={-1}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    SelectProps={{
-                                        inputProps: {
-                                            'aria-label': 'rows per page',
-                                        },
-                                        native: true,
-                                    }}
-                                    onPageChange={(e, p) => {
-                                        this.handleChangePage(e, p)}}
-                                    onRowsPerPageChange={(event) =>this.handleChangeRowsPerPage(event)}
-                                    ActionsComponent={TablePaginationActions}
-                                />
-                            </TableRow>
-                        </TableFooter>
                     </Table>
                 </TableContainer>
             </Grid>

@@ -1,23 +1,21 @@
-import React, {Component, PointerEventHandler} from 'react';
+import React, {Component} from 'react';
 import {
     Button, Dialog, DialogActions, DialogTitle, Divider, FormControl,
-    Grid, InputLabel, List, ListItem, MenuItem,
+    Grid, InputLabel, List, MenuItem,
     Paper,
     Select, SelectChangeEvent, Stack,
     Table,
     TableBody, TableCell,
     TableContainer,
-    TableFooter, TableHead,
-    TablePagination,
+    TableHead,
     TableRow, TextField, Typography
 } from '@mui/material';
-import TablePaginationActions from '@mui/material/TablePagination/TablePaginationActions';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import InfoIcon from '@mui/icons-material/Info';
-import DeleteIcon from '@mui/icons-material/Delete';
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AssistantDirectionIcon from '@mui/icons-material/AssistantDirection';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import axios from 'axios';
 import DialogContent from '@mui/material/DialogContent';
 import {
@@ -29,7 +27,7 @@ import {
     user,
     userClaims,
     userPurchases,
-    users, usersDynamic,
+    usersDynamic,
     villages
 } from '../config/mainConfig';
 import TenantDto from '../data-model/TenantDto';
@@ -48,9 +46,6 @@ interface Props {
 }
 
 interface State {
-    rowsPerPage: number;
-    page: number;
-    totalPages: number;
     isAddUserDialogOpen: boolean;
     //
     tenants: TenantDto[];
@@ -100,9 +95,6 @@ class Users extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            rowsPerPage: 10,
-            page: 0,
-            totalPages: 0,
             isAddUserDialogOpen: false,
             tenants: [],
             selectedTenant: '',
@@ -214,15 +206,6 @@ class Users extends Component<Props, State> {
         this.setAddUserDialog(false);
     }
 
-    handleChangePage(event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) {
-        this.setState({page: newPage});
-        this.getUsers();
-    }
-
-    handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const perPage = parseInt(event.target.value, 10);
-        this.setState({rowsPerPage: perPage, page: 0});
-    }
 
     getTenantRegions(tenantCode: string, isModal: boolean) {
         const url = mainServer + regions+"/"+tenantCode;
@@ -316,8 +299,7 @@ class Users extends Component<Props, State> {
 
     getUsers() {
 
-        const {rowsPerPage, page} = this.state;
-        const url = mainServer + usersDynamic + "/" + page +"/" + rowsPerPage;
+        const url = mainServer + usersDynamic;
 
         const {selectedTenant, selectedRegionId, selectedDistrictId, selectedVillageId} = this.state;
         if (!selectedTenant || selectedTenant === '') {
@@ -336,8 +318,8 @@ class Users extends Component<Props, State> {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed)
                 {
-                    let users: UserDto[] = response.data.entities[0];
-                    this.setState({users: users, totalPages: response.data.totalPages, userCount: response.data.totalCount});
+                    let users: UserDto[] = response.data.entities;
+                    this.setState({users: users});
                 }
                 else {
                     alert(response.data.failureMessage.exceptionMessage);
@@ -405,6 +387,24 @@ class Users extends Component<Props, State> {
             })
             .catch(error => {
                 alert(error);
+            });
+    }
+
+    deleteUser(userId: number) {
+        const url = mainServer + user + "/" + userId;
+        axios({
+            url: url,
+            method: 'DELETE'
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    alert(response.data.entities[0]);
+                    this.getUsers();
+                }
+                else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
             });
     }
 
@@ -541,6 +541,15 @@ class Users extends Component<Props, State> {
         }
     }
 
+    deleteUserByUserId(e: React.MouseEvent<HTMLButtonElement>) {
+        const answer = window.confirm("Do you want to delete user?");
+        if (!answer) {
+            return;
+        }
+        const selectedUserId = parseInt(e.currentTarget.value);
+        this.deleteUser(selectedUserId);
+    }
+
     onClickUserFieldDialogClose() {
         this.setState({isUserFieldsDialogOpen: false});
     }
@@ -554,12 +563,12 @@ class Users extends Component<Props, State> {
     }
 
     render() {
-        const { rowsPerPage, page, tenants, selectedTenant, regions, selectedRegionId,
+        const { tenants, selectedTenant, regions, selectedRegionId,
                 districts, selectedDistrictId, villages, selectedVillageId,
                 tenantsModal, regionsModal, districtsModal, villagesModal,
                 dateOfBirth, extraInfo, phoneNumber,
                 selectedDistrictModal, selectedRegionIdModal, selectedTenantModal, selectedVillageIdModal,
-                selectedUser, userFields, userPurchases, userClaims, userCount, isTenantSelectDisabled, totalPages} = this.state;
+                selectedUser, userFields, userPurchases, userClaims, isTenantSelectDisabled} = this.state;
 
         const {surname, name, email, insuNumber, password, rePassword, users} = this.state;
         return (
@@ -686,13 +695,14 @@ class Users extends Component<Props, State> {
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserFieldsButton(event)}}><SatelliteAltIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserPurchasesButton(event)}}><AddCardIcon/></Button>
                                                 <Button value={usr.sequence} onClick={(event) => {this.onClickUserClaimsButton(event)}}><AssistantDirectionIcon/></Button>
+                                                <Button value={usr.sequence} onClick={(event) => {this.deleteUserByUserId(event)}}><PersonRemoveIcon/></Button>
                                                {/* <Button value={usr.sequence}><DeleteIcon/></Button>*/}
                                             </Stack>
                                         </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
-                            <TableFooter>
+                           {/* <TableFooter>
                                 <TableRow>
                                     <TablePagination
                                         rowsPerPageOptions={[10, 20, 30]}
@@ -712,7 +722,7 @@ class Users extends Component<Props, State> {
 
                                     />
                                 </TableRow>
-                            </TableFooter>
+                            </TableFooter>*/}
                         </Table>
                     </TableContainer>
                 </Grid>

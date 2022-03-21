@@ -8,7 +8,7 @@ import {
     Paper,
     Select,
     SelectChangeEvent, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, TextField
+    TableContainer, TableHead, TableRow, TextField, Typography
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import TenantDto from '../data-model/TenantDto';
@@ -49,6 +49,11 @@ interface State {
     isVillagesPreviewOpen: boolean;
     currentUser: AccountDto;
     isTenantSelectDisabled: boolean;
+    isTemplateDialogOpen: boolean;
+
+    selectedCountryName: string;
+    selectedRegionName: string;
+    selectedDistrictName: string;
 }
 
 class Villages extends Component<Props, State> {
@@ -68,6 +73,10 @@ class Villages extends Component<Props, State> {
             isVillagesPreviewOpen: false,
             currentUser: AccountDto.sample(),
             isTenantSelectDisabled: false,
+            isTemplateDialogOpen: false,
+            selectedCountryName: '',
+            selectedRegionName: '',
+            selectedDistrictName: '',
         }
     }
 
@@ -104,6 +113,10 @@ class Villages extends Component<Props, State> {
 
     handlePreviewButtonClick() {
         this.setState({isVillagesPreviewOpen: true});
+    }
+
+    handleGetTemplateButtonClick() {
+        this.setState({isTemplateDialogOpen: true});
     }
 
     uploadVillages() {
@@ -219,25 +232,38 @@ class Villages extends Component<Props, State> {
 
     private handleTenantSelectChange(event: SelectChangeEvent) {
         const selectedValue = event.target.value;
+        const id = parseInt(selectedValue);
+        const {tenants} = this.state;
+        const tenant = tenants.find(e => e.id === id)
+        // @ts-ignore
+        this.setState({selectedCountryName: tenant.country});
         this.setState({selectedTenant: selectedValue});
         this.getTenantRegions(event.target.value, false);
     }
 
     private handleRegionSelectChange(event: SelectChangeEvent) {
         const selectedValue = event.target.value;
-        this.setState({selectedRegion: selectedValue});
+        const id = parseInt(selectedValue);
+        const {regions} = this.state;
+        const region = regions.find(e => e.sequence === id)
+        // @ts-ignore
+        this.setState({selectedRegion: selectedValue, selectedRegionName: region.name});
         this.getRegionDistricts(selectedValue, false);
     }
 
     private handleDistrictSelectChange(event: SelectChangeEvent) {
         const selectedValue = event.target.value;
-        this.setState({selectedDistrict: selectedValue});
-        this.getDistrictVillages(selectedValue, false);
+        const id = parseInt(selectedValue);
+        const {districts} = this.state;
+        const district = districts.find(e => e.sequence === id);
+        // @ts-ignore
+        this.setState({selectedDistrict: selectedValue, selectedDistrictName: district.name});
+        //this.getDistrictVillages(selectedValue, false);
     }
 
     render() {
         const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages,
-                isTenantSelectDisabled} = this.state;
+                isTenantSelectDisabled, isTemplateDialogOpen} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
                 <Grid item xs={1}/>
@@ -373,8 +399,7 @@ class Villages extends Component<Props, State> {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        /*onClick={(event) => {this.uploadVillages()}}>*/
-                                    >
+                                        onClick={(event) => {this.handleGetTemplateButtonClick()}}>
                                         <FormatListBulletedIcon/>
                                         &nbsp;&nbsp;Get Template
                                     </Button>
@@ -420,6 +445,27 @@ class Villages extends Component<Props, State> {
                         >
                             Close
                         </Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={isTemplateDialogOpen}>
+                    <DialogTitle>Generating Template</DialogTitle>
+                    <DialogContent>
+                        <Grid container>
+                            <Grid item xs={4}>Country</Grid>
+                            <Grid item xs={6}><Typography>{this.state.selectedCountryName}</Typography></Grid>
+                            <Grid item xs={2}><Typography>{this.state.selectedTenant}</Typography></Grid>
+                            <Grid item xs={4}>Region</Grid>
+                            <Grid item xs={6}><Typography>{this.state.selectedRegionName}</Typography></Grid>
+                            <Grid item xs={2}><Typography>{this.state.selectedRegion}</Typography></Grid>
+                            <Grid item xs={4}>District</Grid>
+                            <Grid item xs={6}><Typography>{this.state.selectedDistrictName}</Typography></Grid>
+                            <Grid item xs={2}><Typography>{this.state.selectedDistrict}</Typography></Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button>Download</Button>
+                        <Button
+                        onClick={() => {this.setState({isTemplateDialogOpen: false})}}>Close</Button>
                     </DialogActions>
                 </Dialog>
             </Grid>

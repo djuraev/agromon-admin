@@ -17,6 +17,7 @@ export const crop = "/crop/crop";
 export const newRegion = "/tenant/region/region";
 export const newDistrict = "/tenant/district/district";
 export const fields = "/field/field";
+export const fieldsDynamic = "/field/fields/dynamic";
 export const metrics = "/metric/metrics";
 export const metric = "/metric/metric";
 export const villageMetrics = "/village-metric/village"

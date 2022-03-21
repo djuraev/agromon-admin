@@ -192,27 +192,6 @@ class Purchases extends Component<Props, State> {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TablePagination
-                                        rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
-                                        colSpan={3}
-                                        count={100}
-                                        rowsPerPage={rowsPerPage}
-                                        page={page}
-                                        SelectProps={{
-                                            inputProps: {
-                                                'aria-label': 'rows per page',
-                                            },
-                                            native: true,
-                                        }}
-                                        onPageChange={(e, p) => {
-                                            this.handleChangePage(e, p)}}
-                                        onRowsPerPageChange={(event) =>this.handleChangeRowsPerPage(event)}
-                                        ActionsComponent={TablePaginationActions}
-                                    />
-                                </TableRow>
-                            </TableFooter>
                         </Table>
                     </TableContainer>
                 </Grid>

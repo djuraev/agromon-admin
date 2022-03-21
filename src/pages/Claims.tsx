@@ -127,7 +127,7 @@ class Claims extends Component<Props, State> {
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
             <Grid item xs={12}>
-                <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0, alignItems: 'center'}}>
+                <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
                     <Grid item xs={1}/>
                     <Grid item xs={4}>
                         <FormControl fullWidth size={'small'}>
@@ -217,35 +217,14 @@ class Claims extends Component<Props, State> {
                                 </TableRow>
                             ))}
                         </TableBody>
-                        {/*<TableFooter>
-                            <TableRow>
-                                <TablePagination
-                                    rowsPerPageOptions={[10, 20, 25, { label: 'All', value: -1 }]}
-                                    colSpan={3}
-                                    count={100}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    SelectProps={{
-                                        inputProps: {
-                                            'aria-label': 'rows per page',
-                                        },
-                                        native: true,
-                                    }}
-                                    onPageChange={(e, p) => {
-                                        this.handleChangePage(e, p)}}
-                                    onRowsPerPageChange={(event) =>this.handleChangeRowsPerPage(event)}
-                                    ActionsComponent={TablePaginationActions}
-                                />
-                            </TableRow>
-                        </TableFooter>*/}
                     </Table>
                 </TableContainer>
             </Grid>
             <Grid item xs={12}>
                 <Divider/>
             </Grid>
-        </Grid>);
-    }
+        </Grid>
+        );}
 }
 
 export default Claims;

@@ -317,6 +317,7 @@ class RegionDistricts extends Component<Props, State> {
                 </Grid>
                 <Grid item xs={1}/>
                 <Grid item xs={10} >
+                    <Grid item xs={3}/>
                         <Grid container style={{paddingTop: 15}}>
                             <Grid item xs={3} style={{alignContent: 'center'}}>
                                 <Button style={{width: 200}}
@@ -324,19 +325,19 @@ class RegionDistricts extends Component<Props, State> {
                                         disabled={isTenantSelectDisabled}
                                         onClick={() => {this.setState({isAddNewRegionOpen: true})}}>+ Add Region</Button>
                             </Grid>
-                            <Grid item xs={3}>
+                            {/*<Grid item xs={3}>
                                 <Button style={{width: 200}}
                                         variant="outlined"
                                         disabled={isTenantSelectDisabled}
                                 >+ Add Region Name</Button>
-                            </Grid>
-                            <Grid item xs={3}>
+                            </Grid>*/}
+                            <Grid item xs={6}>
                                 <Button style={{width: 200}}
                                         variant="outlined"
                                         disabled={isTenantSelectDisabled}
                                         onClick={() => {this.setState({isAddNewDistrictOpen: true})}}>+ Add District</Button>
                             </Grid>
-                            <Grid item xs={3}>
+                            {/*<Grid item xs={3}>
                                 <Button
                                     style={{width: 200, paddingLeft: 20}}
                                     variant="outlined"
@@ -344,7 +345,7 @@ class RegionDistricts extends Component<Props, State> {
                                 >
                                     + Add District Name
                                 </Button>
-                            </Grid>
+                            </Grid>*/}
                         </Grid>
                 </Grid>
                 <Grid item xs={1}/>
