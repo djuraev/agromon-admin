@@ -152,9 +152,9 @@ class Purchases extends Component<Props, State> {
                     </Grid>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} style={{marginTop: 20}}>
-                        <Table aria-label="custom pagination table">
-                            <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 500}}>
+                        <Table aria-label="custom pagination table" stickyHeader>
+                            <TableHead>
                                 <TableRow>
                                     <TableCell align="center">N</TableCell>
                                     <TableCell align="center">Farmer</TableCell>

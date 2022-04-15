@@ -126,8 +126,8 @@ class Claims extends Component<Props, State> {
         const claimStatuses = ["Submitted", "Approved", "Rejected"];
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
-            <Grid item xs={12}>
-                <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
+                <Grid item xs={12}>
+                    <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
                     <Grid item xs={1}/>
                     <Grid item xs={4}>
                         <FormControl fullWidth size={'small'}>
@@ -172,9 +172,9 @@ class Claims extends Component<Props, State> {
                 </Grid>
             </Grid>
             <Grid item xs={12}>
-                <TableContainer>
-                    <Table aria-label="simple table" sx={{maxHeight: 500}}>
-                        <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 500}}>
+                    <Table aria-label="custom pagination table" stickyHeader>
+                        <TableHead>
                             <TableRow>
                                 <TableCell align="center">N</TableCell>
                                 <TableCell align="center">Username</TableCell>
