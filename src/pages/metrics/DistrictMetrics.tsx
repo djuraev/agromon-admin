@@ -13,25 +13,28 @@ import {
     Select, SelectChangeEvent,
     Table, TableBody, TableCell,
     TableContainer,
-    TableHead, TableRow, TextField
+    TableHead, TableRow, TextField, Typography
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import {
+    crops,
     districtMetrics,
     districtMetrics2,
     districts,
-    mainServer,
+    mainServer, metrics,
     regions,
     tenant,
-    villages2
 } from '../../config/mainConfig';
+
 import axios from 'axios';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import PreviewIcon from '@mui/icons-material/Preview';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AccountDto from '../../data-model/AccountDto';
 import LocalStorageHelper from '../../helper/LocalStorageHelper';
+import MetricDto from '../../data-model/MetricDto';
+import CropDto from '../../data-model/CropDto';
 
 
 const papaparseOptions = {
@@ -58,7 +61,11 @@ interface State {
     postMetrics: DistrictMetricDto[];
     currentUser: AccountDto;
     isTenantSelectDisabled: boolean;
-
+    isGenerateTemplate: boolean;
+    metrics: MetricDto[];
+    selectedMetric: string;
+    crops: CropDto[];
+    selectedCrop: string;
 }
 class DistrictMetrics extends Component<Props, State> {
     //
@@ -77,6 +84,11 @@ class DistrictMetrics extends Component<Props, State> {
             postMetrics: [],
             currentUser: AccountDto.sample(),
             isTenantSelectDisabled: false,
+            isGenerateTemplate: false,
+            metrics: [],
+            selectedMetric: '',
+            crops: [],
+            selectedCrop: '',
         }
     }
 
@@ -93,6 +105,8 @@ class DistrictMetrics extends Component<Props, State> {
             this.setState({isTenantSelectDisabled: true})
             this.getTenantRegions(currentUser.tenantId);
         }
+        this.getAllMetrics();
+        this.getAllCrops();
     }
 
     getTenants() {
@@ -133,8 +147,8 @@ class DistrictMetrics extends Component<Props, State> {
             });
     }
 
-    getDistrictMetrics(districtId: string) {
-        const url = mainServer + districtMetrics + "/" + districtId;
+    getDistrictMetrics(districtId: string, metricId: string) {
+        const url = mainServer + districtMetrics + "/" + districtId+"/"+metricId;
         axios({
             url: url,
             method: 'GET',
@@ -143,6 +157,44 @@ class DistrictMetrics extends Component<Props, State> {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
                     this.setState({districtMetrics: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getAllMetrics() {
+        const url = mainServer + metrics;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({metrics: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getAllCrops() {
+        const url = mainServer + crops;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({crops: response.data.entities[0]});
                 } else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
@@ -185,7 +237,37 @@ class DistrictMetrics extends Component<Props, State> {
     handleDistrictSelectChange(event: SelectChangeEvent) {
         const districtId = event.target.value;
         this.setState({selectedDistrictId: districtId});
-        this.getDistrictMetrics(districtId);
+    }
+
+    handleMetricSelectChange(event: SelectChangeEvent) {
+        const metricID = event.target.value;
+        this.setState({selectedMetric: metricID});
+    }
+
+    handleCropSelectChange(event: SelectChangeEvent) {
+        const cropId = event.target.value;
+        this.setState({selectedCrop: cropId});
+    }
+
+    generateTemplateClick() {
+        const {selectedTenant, selectedRegionId, selectedDistrictId, selectedMetric} = this.state;
+        if (selectedTenant === '' || selectedTenant.length === 0) {
+            alert("Please, select the Country.");
+            return;
+        }
+        if (selectedRegionId === '' || selectedRegionId.length === 0) {
+            alert("Please, select the Region.");
+            return;
+        }
+        if (selectedDistrictId === '' || selectedDistrictId.length === 0) {
+            alert("Please, select the District.");
+            return;
+        }
+        if (selectedMetric === '' || selectedMetric.length === 0) {
+            alert("Please, select the Metric.");
+            return;
+        }
+        this.setState({isGenerateTemplate: true});
     }
 
     handleForce (data: any[], fileInfo: IFileInfo) {
@@ -231,9 +313,23 @@ class DistrictMetrics extends Component<Props, State> {
         this.setState({isPreviewOpen: true});
     }
 
+    handleSearchClick() {
+        const {selectedDistrictId, selectedMetric}  = this.state;
+        if (selectedDistrictId === '' || selectedDistrictId.length === 0) {
+            alert("Please, select District.");
+            return;
+        }
+        if (selectedMetric === '' || selectedMetric.length === 0) {
+            alert("Please, select metric.");
+            return;
+        }
+        this.getDistrictMetrics(selectedDistrictId, selectedMetric);
+    }
+
     render() {
-        const {tenants, selectedTenant, regions, selectedRegionId, districts, selectedDistrictId, districtMetrics,
-                isPreviewOpen, postMetrics, csvFilePath, isTenantSelectDisabled} = this.state;
+        const { tenants, selectedTenant, regions, selectedRegionId, districts, selectedDistrictId, districtMetrics,
+                isPreviewOpen, postMetrics, csvFilePath, isTenantSelectDisabled, isGenerateTemplate, selectedMetric,
+                metrics, crops, selectedCrop } = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -295,9 +391,45 @@ class DistrictMetrics extends Component<Props, State> {
                                 </Select>
                             </FormControl>
                         </Grid>
+                        <Grid item xs={2}>
+                            <FormControl fullWidth size={'small'}>
+                                <InputLabel id="metrictSelectLabel">Metrics</InputLabel>
+                                <Select
+                                    labelId="metricSelectLabel"
+                                    id="metricSelect"
+                                    label="Metrics"
+                                    value={selectedMetric}
+                                    onChange={(e) => {this.handleMetricSelectChange(e)}}
+                                >
+                                    {metrics.map((metric) => (
+                                        <MenuItem value={metric.sequence.toLocaleString()}>{metric.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
 
                         <Grid item xs={2}>
-                            <Button variant="outlined">
+                            <FormControl fullWidth size={'small'}>
+                                <InputLabel id="cropSelectLabel">Crop</InputLabel>
+                                <Select
+                                    labelId="cropSelectLabel"
+                                    id="cropSelect"
+                                    label="Crop"
+                                    value={selectedCrop}
+                                    onChange={(e) => {this.handleMetricSelectChange(e)}}
+                                >
+                                    {crops.map((crop) => (
+                                        <MenuItem value={crop.sequence.toLocaleString()}>{crop.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid item xs={2}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {this.handleSearchClick()}}
+                                >
                                 <LocationSearchingSharpIcon/>
                                 &nbsp;&nbsp;Search
                             </Button>
@@ -371,8 +503,7 @@ class DistrictMetrics extends Component<Props, State> {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        /*onClick={(event) => {this.uploadVillages()}}>*/
-                                    >
+                                        onClick={(event) => {this.generateTemplateClick()}}>
                                         <FormatListBulletedIcon/>
                                         &nbsp;&nbsp;Generate Template
                                     </Button>
@@ -382,7 +513,7 @@ class DistrictMetrics extends Component<Props, State> {
                     </Paper>
                 </Grid>
                 <Dialog open={isPreviewOpen}>
-                    <DialogTitle>Parsed Villages</DialogTitle>
+                    <DialogTitle>Parsed Metric Data</DialogTitle>
                     <DialogContent>
                         <TableContainer>
                             <Table aria-label="simple table">
@@ -426,9 +557,41 @@ class DistrictMetrics extends Component<Props, State> {
                         </Button>
                     </DialogActions>
                 </Dialog>
+                <Dialog open={isGenerateTemplate}>
+                    <DialogTitle>Template for Upload</DialogTitle>
+                    <DialogContent>
+                        <Grid container>
+                            <Grid item>
+                                <Typography>{selectedTenant}/{selectedTenant}/{selectedDistrictId}</Typography>
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            variant="contained"
+                            onClick={() => {this.onSaveGenerateTemplate()}}
+                            >
+                            Save
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={() => {this.onCloseGenerateTemplate()}}
+                            >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Grid>
         );
     }
+
+    onCloseGenerateTemplate() {
+        this.setState({isGenerateTemplate: false});
+    }
+
+    onSaveGenerateTemplate() {
+        const {selectedTenant, selectedRegionId, selectedDistrictId, selectedMetric, } = this.state;    }
 }
+
 
 export default DistrictMetrics;

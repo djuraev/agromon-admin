@@ -30,4 +30,3 @@ export const villageMetrics2= "/village-metric/metrics";
 export const userAuth = "/auth/login";
 export const purchases = "";
 export const claim = "/claim";
-
