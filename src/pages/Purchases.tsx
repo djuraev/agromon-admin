@@ -18,7 +18,7 @@ import TenantDto from '../data-model/TenantDto';
 import PurchaseDto from '../data-model/PurchaseDto';
 import AccountDto from '../data-model/AccountDto';
 import LocalStorageHelper from '../helper/LocalStorageHelper';
-import {mainServer, tenant} from '../config/mainConfig';
+import {mainServer, purchases, tenant} from '../config/mainConfig';
 import axios from 'axios';
 
 interface Props {
@@ -85,7 +85,7 @@ class Purchases extends Component<Props, State> {
 
 
     getPurchases(tenantId: string) {
-        const url = mainServer + tenant + "/tenants";
+        const url = mainServer + purchases + "/tenant/"+tenantId;
         axios({
             url: url,
             method: 'GET',
@@ -108,20 +108,12 @@ class Purchases extends Component<Props, State> {
     }
 
     onClickSearchButton() {
-        //this.getFields();
-    }
-
-    handleChangePage(event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) {
-        this.setState({page: newPage});
-    }
-
-    handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const perPage = parseInt(event.target.value, 10);
-        this.setState({rowsPerPage: perPage, page: 0});
+        const {selectedTenant} = this.state;
+        this.getPurchases(selectedTenant);
     }
 
     render() {
-        const {selectedTenant, tenants, purchases,rowsPerPage, page} = this.state;
+        const {selectedTenant, tenants, purchases} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -152,7 +144,7 @@ class Purchases extends Component<Props, State> {
                     </Grid>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 500}}>
+                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 700}}>
                         <Table aria-label="custom pagination table" stickyHeader>
                             <TableHead>
                                 <TableRow>

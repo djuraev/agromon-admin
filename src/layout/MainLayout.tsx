@@ -29,6 +29,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CreditScoreIcon from '@mui/icons-material/CreditScore';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import MetricsAndCrops from '../pages/metrics/MetricsAndCrops';
 import Tenants from '../pages/Tenants';
 import Users from '../pages/Users';
@@ -49,6 +50,7 @@ import {mainServer, tenant, userAuth} from '../config/mainConfig';
 import axios, {AxiosError} from 'axios';
 import AccountDto from '../data-model/AccountDto';
 import Dashboard from '../pages/dashboard';
+import AdminManagement from '../pages/AdminManagement';
 
 interface State {
     username: string;
@@ -247,6 +249,11 @@ class MainLayout extends Component<Props, State> {
                                     Info Editor
                                 </Link>
                             </MenuItem>
+                            <MenuItem icon={<AdminPanelSettingsIcon/>}>
+                                <Link to={"/adminManagement"}>
+                                    Admin Management
+                                </Link>
+                            </MenuItem>
                         </Menu>
                     </ProSidebar>
                 </Grid>
@@ -290,6 +297,9 @@ class MainLayout extends Component<Props, State> {
                             </Route>
                             <Route path='/infoEditor'>
                                 <InfoEditor/>
+                            </Route>
+                            <Route path='/adminManagement'>
+                                <AdminManagement/>
                             </Route>
                         </Switch>
                 </Grid>

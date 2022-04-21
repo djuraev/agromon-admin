@@ -9,7 +9,7 @@ import {
     Select, SelectChangeEvent,
     Table, TableBody, TableCell,
     TableContainer,
-    TableHead, TableRow, TextField,
+    TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import TenantDto from '../../data-model/TenantDto';
@@ -17,11 +17,12 @@ import RegionDto from '../../data-model/RegionDto';
 import DistrictDto from '../../data-model/DistrictDto';
 import VillageDto from '../../data-model/VillageDto';
 import {
+    crops,
     districtMetrics2,
     districts,
-    mainServer,
+    mainServer, metrics,
     regions,
-    tenant,
+    tenant, villageMetricDynamic,
     villageMetrics, villageMetrics2,
     villages
 } from '../../config/mainConfig';
@@ -33,6 +34,10 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import AccountDto from '../../data-model/AccountDto';
 import LocalStorageHelper from '../../helper/LocalStorageHelper';
+import MetricDto from '../../data-model/MetricDto';
+import CropDto from '../../data-model/CropDto';
+import UserDto from '../../data-model/UserDto';
+import {CSVLink} from 'react-csv';
 
 const papaparseOptions = {
     header: true,
@@ -60,6 +65,14 @@ interface State {
     postMetrics: VillageMetricDto[];
     currentUser: AccountDto;
     isTenantSelectDisabled: boolean;
+    metrics: MetricDto[];
+    crops: CropDto[];
+    selectedMetric: string;
+    selectedCrop: string;
+    isGenerateTemplate: boolean;
+    csvDataContent: [];
+    selectedCropName: string;
+    selectedMetricName: string;
 }
 class VillageMetrics extends Component<Props, State> {
     //
@@ -80,6 +93,14 @@ class VillageMetrics extends Component<Props, State> {
             postMetrics: [],
             currentUser: AccountDto.sample(),
             isTenantSelectDisabled: false,
+            metrics: [],
+            crops: [],
+            selectedMetric: '',
+            selectedCrop: '',
+            isGenerateTemplate: false,
+            csvDataContent: [],
+            selectedCropName: '',
+            selectedMetricName: '',
         }
     }
 
@@ -96,6 +117,8 @@ class VillageMetrics extends Component<Props, State> {
             this.setState({isTenantSelectDisabled: true})
             this.getTenantRegions(currentUser.tenantId);
         }
+        this.getAllCrops();
+        this.getAllMetrics();
     }
 
     getTenantRegions(tenantCode: string) {
@@ -174,17 +197,24 @@ class VillageMetrics extends Component<Props, State> {
             });
     }
 
-    getVillageMetrics(villageId: string) {
-        const url = mainServer + villageMetrics + "/" + villageId;
-        axios({
-            url: url,
-            method: 'GET',
-        })
+    getVillageMetrics() {
+        const url = mainServer + villageMetricDynamic;
+        const { selectedVillageId, selectedCrop, selectedMetric} = this.state;
+        const metricExample = {
+            "villageId": selectedVillageId,
+            "cropId": selectedCrop,
+            "metricId": selectedMetric
+        };
+
+        axios.post(url, metricExample)
             .then(response => {
                 const requestFailed = response.data.requestFailed;
-                if (!requestFailed) {
-                    this.setState({villageMetrics: response.data.entities[0]});
-                } else {
+                if (!requestFailed)
+                {
+                    let metrics: VillageMetricDto[] = response.data.entities[0];
+                    this.setState({villageMetrics: metrics});
+                }
+                else {
                     alert(response.data.failureMessage.exceptionMessage);
                 }
             })
@@ -214,7 +244,6 @@ class VillageMetrics extends Component<Props, State> {
     handleVillageSelectChange(event: SelectChangeEvent) {
         const villageId = event.target.value;
         this.setState({selectedVillageId: villageId});
-        this.getVillageMetrics(villageId);
     }
 
     handleForce (data: any[], fileInfo: IFileInfo) {
@@ -236,19 +265,112 @@ class VillageMetrics extends Component<Props, State> {
         //this.setState({postVillages: villages});
     }
 
+    getAllMetrics() {
+        const url = mainServer + metrics;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({metrics: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
+    getAllCrops() {
+        const url = mainServer + crops;
+        axios({
+            url: url,
+            method: 'GET',
+        })
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.setState({crops: response.data.entities[0]});
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     handlePreviewButtonClick() {
         this.setState({isPreviewOpen: true});
     }
 
+    handleMetricSelectChange(event: SelectChangeEvent) {
+        const metricID = event.target.value;
+        this.setState({selectedMetric: metricID});
+    }
+
+    handleCropSelectChange(event: SelectChangeEvent) {
+        const cropId = event.target.value;
+        this.setState({selectedCrop: cropId});
+    }
+
+    handSearchButtonClick() {
+        this.getVillageMetrics();
+    }
+
+    generateTemplateClick() {
+        const {metrics, selectedTenant, selectedRegionId, selectedDistrictId, selectedMetric, crops, selectedCrop, selectedVillageId} = this.state;
+        if (selectedTenant === '' || selectedTenant.length === 0) {
+            alert("Please, select the Country.");
+            return;
+        }
+        if (selectedRegionId === '' || selectedRegionId.length === 0) {
+            alert("Please, select the Region.");
+            return;
+        }
+        if (selectedDistrictId === '' || selectedDistrictId.length === 0) {
+            alert("Please, select the District.");
+            return;
+        }
+        if (selectedVillageId === '' || selectedVillageId.length === 0) {
+            alert("Please, select the Village.");
+            return;
+        }
+        if (selectedMetric === '' || selectedMetric.length === 0) {
+            alert("Please, select the Metric.");
+            return;
+        }
+        if (selectedCrop === '' || selectedCrop.length === 0) {
+            alert("Please, select the Crop.");
+            return;
+        }
+        // @ts-ignore
+        let cropName = crops.find(crop => crop.sequence === parseInt(selectedCrop)).name;
+        // @ts-ignore
+        let metricName = metrics.find(metric => metric.sequence === parseInt(selectedMetric)).name;
+
+        const csvData = [
+            ["tenantid", "cropid", "cropname", "metricid", "metricname", "villageid", "year", "value"],
+            [selectedTenant, selectedCrop, cropName, selectedMetric, metricName, selectedVillageId, "Year here", "Value here"]
+        ];
+        // @ts-ignore
+        this.setState({isGenerateTemplate: true, selectedMetricName: metricName, selectedCropName: cropName, csvDataContent: csvData});
+    }
+
     render() {
         const {tenants, selectedTenant, regions, selectedRegionId, districts, selectedDistrictId, villages, selectedVillageId,
-               villageMetrics, csvFilePath, isPreviewOpen, postMetrics, isTenantSelectDisabled} = this.state;
+               villageMetrics, csvFilePath, isPreviewOpen, postMetrics, isTenantSelectDisabled, metrics, crops, selectedMetric,
+               selectedCrop, isGenerateTemplate, csvDataContent, selectedCropName, selectedMetricName} = this.state;
+
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
                     <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
                         <Grid item xs={1}/>
-                        <Grid item xs={4}>
+                        <Grid item xs={3}>
                             <FormControl fullWidth size={'small'}>
                                 <InputLabel id="countrySelectLabel">Country</InputLabel>
                                 <Select
@@ -265,7 +387,7 @@ class VillageMetrics extends Component<Props, State> {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={4}>
+                        <Grid item xs={3}>
                             <FormControl fullWidth size={'small'}>
                                 <InputLabel id="regionSelectLabel">Region</InputLabel>
                                 <Select
@@ -286,9 +408,7 @@ class VillageMetrics extends Component<Props, State> {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={3}/>
-                        <Grid item xs={1}/>
-                        <Grid item xs={4}>
+                        <Grid item xs={3}>
                             <FormControl fullWidth size={'small'}>
                                 <InputLabel id="districtSelectLabel">District</InputLabel>
                                 <Select
@@ -304,8 +424,9 @@ class VillageMetrics extends Component<Props, State> {
                                 </Select>
                             </FormControl>
                         </Grid>
-
-                        <Grid item xs={4}>
+                        <Grid item xs={2}/>
+                        <Grid item xs={1}/>
+                        <Grid item xs={3}>
                             <FormControl fullWidth size={'small'}>
                                 <InputLabel id="villageSelectLabel">Village</InputLabel>
                                 <Select
@@ -321,8 +442,43 @@ class VillageMetrics extends Component<Props, State> {
                                 </Select>
                             </FormControl>
                         </Grid>
+                        <Grid item xs={3}>
+                            <FormControl fullWidth size={'small'}>
+                                <InputLabel id="metricSelectLabel">Metric</InputLabel>
+                                <Select
+                                    labelId="metricSelectLabel"
+                                    id="metricSelect"
+                                    label="Metric"
+                                    value={selectedMetric}
+                                    onChange={(e) => {this.handleMetricSelectChange(e)}}
+                                >
+                                    {metrics.map((metric) => (
+                                        <MenuItem value={metric.sequence.toLocaleString()}>{metric.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <FormControl fullWidth size={'small'}>
+                                <InputLabel id="cropSelectLabel">Crop</InputLabel>
+                                <Select
+                                    labelId="cropSelectLabel"
+                                    id="cropSelect"
+                                    label="Crop"
+                                    value={selectedCrop}
+                                    onChange={(e) => {this.handleCropSelectChange(e)}}
+                                >
+                                    {crops.map((crop) => (
+                                        <MenuItem value={crop.sequence.toLocaleString()}>{crop.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
                         <Grid item xs={1}>
-                            <Button variant="outlined">
+                            <Button
+                                variant="outlined"
+                                onClick={() => {this.handSearchButtonClick()}}
+                            >
                                 <LocationSearchingSharpIcon/>
                                 &nbsp;&nbsp;Search
                             </Button>
@@ -343,7 +499,6 @@ class VillageMetrics extends Component<Props, State> {
                             <TableBody>
                                 {villageMetrics.map((vm) => (
                                     <TableRow
-                                        key={vm.sequence}
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
                                         <TableCell align="center">{vm.cropName}</TableCell>
@@ -395,7 +550,7 @@ class VillageMetrics extends Component<Props, State> {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        /*onClick={(event) => {this.uploadVillages()}}>*/
+                                        onClick={(event) => {this.generateTemplateClick()}}
                                     >
                                         <FormatListBulletedIcon/>
                                         &nbsp;&nbsp;Generate Template
@@ -406,7 +561,7 @@ class VillageMetrics extends Component<Props, State> {
                     </Paper>
                 </Grid>
                 <Dialog open={isPreviewOpen}>
-                    <DialogTitle>Parsed Villages</DialogTitle>
+                    <DialogTitle>Parsed Metrics</DialogTitle>
                     <DialogContent>
                         <TableContainer>
                             <Table aria-label="simple table" stickyHeader>
@@ -450,8 +605,56 @@ class VillageMetrics extends Component<Props, State> {
                         </Button>
                     </DialogActions>
                 </Dialog>
+
+                <Dialog open={isGenerateTemplate}>
+                    <DialogTitle>Template for Upload</DialogTitle>
+                    <DialogContent>
+                        <TableContainer>
+                            <Table aria-label="custom pagination table" stickyHeader>
+                                <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                                    <TableRow>
+                                        <TableCell align="center">Crop Id</TableCell>
+                                        <TableCell align="center">Crop Name</TableCell>
+                                        <TableCell align="center">Metric Id</TableCell>
+                                        <TableCell align="center">Metric Name</TableCell>
+                                        <TableCell align="center">Village Id</TableCell>
+                                        <TableCell align="center">Year</TableCell>
+                                        <TableCell align="center">Value</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell align="center">{selectedCrop}</TableCell>
+                                        <TableCell align="center">{selectedCropName}</TableCell>
+                                        <TableCell align="center">{selectedMetric}</TableCell>
+                                        <TableCell align="center">{selectedMetricName}</TableCell>
+                                        <TableCell align="center">{selectedVillageId}</TableCell>
+                                        <TableCell align="center">Year here</TableCell>
+                                        <TableCell align="center">Value here</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            variant="contained">
+                            <CSVLink data={csvDataContent}>Download</CSVLink>
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={() => {this.onCloseGenerateTemplate()}}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Grid>
         );
+    }
+
+    onCloseGenerateTemplate() {
+        this.setState({isGenerateTemplate: false});
     }
 
     private uploadVillages() {
