@@ -13,7 +13,7 @@ import {
     Select, SelectChangeEvent,
     Table, TableBody, TableCell,
     TableContainer,
-    TableHead, TableRow, TextField, Typography
+    TableHead, TableRow, TextField
 } from '@mui/material';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';

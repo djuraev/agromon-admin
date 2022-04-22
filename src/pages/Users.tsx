@@ -658,8 +658,8 @@ class Users extends Component<Props, State> {
                     </Grid>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} style={{marginTop: 20}}>
-                        <Table aria-label="custom pagination table">
+                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 500}}>
+                        <Table aria-label="custom pagination table" stickyHeader>
                             <TableHead style={{backgroundColor: 'whitesmoke'}}>
                                 <TableRow>
                                     <TableCell align="center">N</TableCell>

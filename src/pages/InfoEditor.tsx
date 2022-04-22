@@ -1,13 +1,16 @@
 import React from 'react';
 import {
+    Button,
     Divider,
     FormControl,
     Grid,
     InputLabel,
     MenuItem,
     Paper,
-    Select, SelectChangeEvent
+    Select, SelectChangeEvent, TextField
 } from '@mui/material';
+import Box from '@mui/material/Box';
+
 
 interface Props {
 
@@ -82,10 +85,31 @@ class InfoEditor extends React.Component<Props, State> {
                         </Grid>
                     </Grid>
                     <Grid item xs={12}>
+                        <Box
+                            display="flex"
+                            flexDirection="column"
+                            height="500px" // fixed the height
+                            style={{
+                                border: "2px solid black",
+                                overflow: "hidden",
+                                overflowY: "scroll" // added scroll
+                            }}
+                        >
+                       <TextField
+                           style={{height: 500, overflow: "hidden", overflowY: "scroll"}}
+                            multiline={true}
+                            fullWidth
+                            />
+                        </Box>
                     </Grid>
-                    <Grid item xs={12} style={{marginTop: 50}}>
+                    <Grid item xs={12} style={{marginTop: 50, marginBottom: 25}}>
                         <Divider />
                     </Grid>
+                    <Grid item xs={5}/>
+                    <Grid item xs={2}>
+                        <Button variant="contained">Save</Button>
+                    </Grid>
+                    <Grid item xs={5}/>
                 </Grid>
             </Grid>
         );

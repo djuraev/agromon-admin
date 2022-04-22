@@ -28,6 +28,7 @@
     "mapbox-gl": "4.8.6",
     "mobx": "^6.3.7",
     "mobx-react": "^7.2.1",
+    "mui-rte": "^2.0.1",
     "react": "^17.0.2",
     "react-csv": "^2.2.2",
     "react-csv-reader": "^3.4.0",

@@ -24,6 +24,7 @@ import CSVReader, {IFileInfo} from 'react-csv-reader';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import AccountDto from '../data-model/AccountDto';
 import LocalStorageHelper from '../helper/LocalStorageHelper';
+import {CSVLink} from 'react-csv';
 
 const papaparseOptions = {
     header: true,
@@ -50,10 +51,10 @@ interface State {
     currentUser: AccountDto;
     isTenantSelectDisabled: boolean;
     isTemplateDialogOpen: boolean;
-
     selectedCountryName: string;
     selectedRegionName: string;
     selectedDistrictName: string;
+    csvDataContent: [];
 }
 
 class Villages extends Component<Props, State> {
@@ -77,6 +78,7 @@ class Villages extends Component<Props, State> {
             selectedCountryName: '',
             selectedRegionName: '',
             selectedDistrictName: '',
+            csvDataContent: [],
         }
     }
 
@@ -116,7 +118,13 @@ class Villages extends Component<Props, State> {
     }
 
     handleGetTemplateButtonClick() {
-        this.setState({isTemplateDialogOpen: true});
+        const {  selectedTenant, selectedDistrict} = this.state;
+        const csvData = [
+            ["tenantid", "districtid", "villagename", "latlong"],
+            [selectedTenant, selectedDistrict, "Name here", "Coordinates here"],
+        ];
+        // @ts-ignore
+        this.setState({isTemplateDialogOpen: true, csvDataContent: csvData});
     }
 
     uploadVillages() {
@@ -258,12 +266,17 @@ class Villages extends Component<Props, State> {
         const district = districts.find(e => e.sequence === id);
         // @ts-ignore
         this.setState({selectedDistrict: selectedValue, selectedDistrictName: district.name});
-        //this.getDistrictVillages(selectedValue, false);
+        this.getDistrictVillages(selectedValue, false);
+    }
+
+    onSearchButtonClick() {
+        const {selectedDistrict} = this.state;
+        this.getDistrictVillages(selectedDistrict, false);
     }
 
     render() {
         const {tenants, regions, districts, villages, selectedTenant, selectedRegion, selectedDistrict, postVillages,
-                isTenantSelectDisabled, isTemplateDialogOpen} = this.state;
+                isTenantSelectDisabled, isTemplateDialogOpen, csvDataContent} = this.state;
         return (
             <Grid container spacing={1} style={{padding: 10}}>
                 <Grid item xs={1}/>
@@ -321,7 +334,8 @@ class Villages extends Component<Props, State> {
                                 </FormControl>
                             </Grid>
                             <Grid item xs={1}>
-                                <Button variant="outlined" >
+                                <Button variant="outlined"
+                                    onClick={() => {this.onSearchButtonClick()}}>
                                     <LocationSearchingSharpIcon/>
                                     &nbsp;&nbsp;Search
                                 </Button>
@@ -463,7 +477,11 @@ class Villages extends Component<Props, State> {
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        <Button>Download</Button>
+                        <Button>
+                            <CSVLink
+                                data={csvDataContent}
+                                filename={"villagesTemplate.csv"}>Download</CSVLink>
+                        </Button>
                         <Button
                         onClick={() => {this.setState({isTemplateDialogOpen: false})}}>Close</Button>
                     </DialogActions>

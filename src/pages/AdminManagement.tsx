@@ -100,6 +100,24 @@ class Users extends Component<Props, State> {
         const {surname, name, password, rePassword, selectedAdminType, extraInfo} = this.state;
         const { selectedTenantModal, username } = this.state;
 
+        if (selectedTenantModal === '' || selectedTenantModal.length === 0) {
+            alert("Please, select the country.");
+            return;
+        }
+        if (selectedAdminType === '' || selectedTenantModal.length === 0) {
+            alert("Please, select the admin type.");
+            return;
+        }
+        if (username === '' || username.length === 0) {
+            alert("Please, enter username.");
+            return;
+        }
+
+        if (password === '' || password.length === 0 || (password !== rePassword)) {
+            alert('Password do not match. Please, check password.');
+            return;
+        }
+
         const userInfo = {
             'tenantId': selectedTenantModal,
             'surname': surname,
@@ -109,16 +127,11 @@ class Users extends Component<Props, State> {
             'extraInfo': extraInfo,
             'username': username
         };
-
-        if (password !== rePassword) {
-            alert('Password do not match. Please, check password.');
-            return;
-        }
         const url = mainServer + manager;
         axios.post(url, userInfo)
             .then(response => {
                 if (response.data.requestFailed) {
-                    alert(response.data.failureMessage);
+                    alert(response.data.failureMessage.exceptionMessage);
                 }
                 else {
                     alert("Admin successfully registered.");
@@ -172,8 +185,8 @@ class Users extends Component<Props, State> {
             });
     }
 
-    deleteUser(userId: number) {
-        const url = mainServer + user + "/" + userId;
+    deleteUser(username: string) {
+        const url = mainServer + manager + "/" + username;
         axios({
             url: url,
             method: 'DELETE'
@@ -182,6 +195,7 @@ class Users extends Component<Props, State> {
                 const requestFailed = response.data.requestFailed;
                 if (!requestFailed) {
                     alert(response.data.entities[0]);
+                    this.getManagers();
                 }
                 else {
                     alert(response.data.failureMessage.exceptionMessage);
@@ -226,8 +240,8 @@ class Users extends Component<Props, State> {
         if (!answer) {
             return;
         }
-        const selectedUserId = parseInt(e.currentTarget.value);
-        this.deleteUser(selectedUserId);
+        const selectedUser = e.currentTarget.value;
+        this.deleteUser(selectedUser);
     }
 
     render() {
@@ -238,8 +252,8 @@ class Users extends Component<Props, State> {
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} style={{marginTop: 20}}>
-                        <Table aria-label="custom pagination table">
+                    <TableContainer component={Paper} style={{marginTop: 20}} sx={{ maxHeight: 620}}>
+                        <Table aria-label="custom pagination table" stickyHeader>
                             <TableHead style={{backgroundColor: 'whitesmoke'}}>
                                 <TableRow>
                                     <TableCell align="center">N</TableCell>
@@ -272,7 +286,7 @@ class Users extends Component<Props, State> {
                                         <TableCell align="center">{usr.username}</TableCell>
                                         <TableCell align="center">{usr.extraInfo}</TableCell>
                                         <TableCell align="center">
-                                            <Button value={usr.sequence} onClick={(event) => {this.deleteUserByUserId(event)}}><PersonRemoveIcon/></Button>
+                                            <Button value={usr.username} onClick={(event) => {this.deleteUserByUserId(event)}}><PersonRemoveIcon/></Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}
