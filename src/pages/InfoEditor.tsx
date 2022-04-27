@@ -7,9 +7,9 @@ import {
     InputLabel,
     MenuItem,
     Paper,
-    Select, SelectChangeEvent, TextField
+    Select, SelectChangeEvent
 } from '@mui/material';
-import Box from '@mui/material/Box';
+
 
 
 interface Props {
@@ -29,6 +29,7 @@ class InfoEditor extends React.Component<Props, State> {
             selectedPage: '',
         }
     }
+
 
     handleLanguageChange(event: SelectChangeEvent) {
         this.setState({selectedLanguage: event.target.value});
@@ -85,22 +86,7 @@ class InfoEditor extends React.Component<Props, State> {
                         </Grid>
                     </Grid>
                     <Grid item xs={12}>
-                        <Box
-                            display="flex"
-                            flexDirection="column"
-                            height="500px" // fixed the height
-                            style={{
-                                border: "2px solid black",
-                                overflow: "hidden",
-                                overflowY: "scroll" // added scroll
-                            }}
-                        >
-                       <TextField
-                           style={{height: 500, overflow: "hidden", overflowY: "scroll"}}
-                            multiline={true}
-                            fullWidth
-                            />
-                        </Box>
+
                     </Grid>
                     <Grid item xs={12} style={{marginTop: 50, marginBottom: 25}}>
                         <Divider />
@@ -115,5 +101,6 @@ class InfoEditor extends React.Component<Props, State> {
         );
     }
 }
+
 
 export default InfoEditor;

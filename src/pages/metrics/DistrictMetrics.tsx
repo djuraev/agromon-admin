@@ -25,7 +25,7 @@ import {
     regions,
     tenant,
 } from '../../config/mainConfig';
-import { CSVLink, CSVDownload } from 'react-csv';
+import { CSVLink } from 'react-csv';
 import axios from 'axios';
 import CSVReader, {IFileInfo} from 'react-csv-reader';
 import PreviewIcon from '@mui/icons-material/Preview';
@@ -70,6 +70,8 @@ interface State {
     selectedCropName: string;
     selectedMetricName: string;
     csvDataContent: [];
+    failedMetrics: DistrictMetricDto[];
+    isFailedUploadViewOpen: boolean;
 }
 
 class DistrictMetrics extends Component<Props, State> {
@@ -98,6 +100,8 @@ class DistrictMetrics extends Component<Props, State> {
             selectedCropName: '',
             selectedMetricName: '',
             csvDataContent: [],
+            failedMetrics: [],
+            isFailedUploadViewOpen: false,
         }
     }
 
@@ -156,8 +160,8 @@ class DistrictMetrics extends Component<Props, State> {
             });
     }
 
-    getDistrictMetrics(districtId: string, metricId: string) {
-        const url = mainServer + districtMetrics + "/" + districtId+"/"+metricId;
+    getDistrictMetrics(districtId: string, metricId: string, cropId: string) {
+        const url = mainServer + districtMetrics + "/" + districtId+"/"+metricId+"/"+cropId;
         axios({
             url: url,
             method: 'GET',
@@ -312,35 +316,43 @@ class DistrictMetrics extends Component<Props, State> {
     }
 
     uploadDistrictMetrics() {
-        const {postMetrics} = this.state;
+        const {postMetrics, failedMetrics} = this.state;
         if (postMetrics.length === 0) {
             alert("No District Metrics. Please, select .csv file which contains metrics.");
             return;
         }
         const url = mainServer + districtMetrics;
-        let str: string = "";
-        let i: number = 0;
+        let i = 0, n=postMetrics.length;
+        this.setState({failedMetrics: []});
         for (let item of postMetrics) {
+            i++;
           axios.post(url, item)
                 .then(response => {
                     if (response.data.requestFailed) {
-                        str+=item.year;
-                        i++;
-                    }
-                    else {
+                        let tmpMetrics = failedMetrics;
+                        tmpMetrics.push(item);
+                        this.setState({failedMetrics: tmpMetrics});
                     }
                 })
                 .catch(error => alert(JSON.stringify(error)));
         }
+        if (i === n) {
+            if ( failedMetrics.length > 0) {
+                alert("Some metric failed to upload. You can view list of them.");
+                this.setState({isFailedUploadViewOpen: true})
+            }
+            else {
+                alert("All metrics successfully uploaded.")
+            }
+        }
     }
-
 
     handlePreviewButtonClick() {
         this.setState({isPreviewOpen: true});
     }
 
     handleSearchClick() {
-        const {selectedDistrictId, selectedMetric}  = this.state;
+        const {selectedDistrictId, selectedMetric, selectedCrop}  = this.state;
         if (selectedDistrictId === '' || selectedDistrictId.length === 0) {
             alert("Please, select District.");
             return;
@@ -349,13 +361,18 @@ class DistrictMetrics extends Component<Props, State> {
             alert("Please, select metric.");
             return;
         }
-        this.getDistrictMetrics(selectedDistrictId, selectedMetric);
+        if (selectedCrop === '' || selectedCrop.length === 0) {
+            alert("Please, select Crop.");
+            return;
+        }
+        this.getDistrictMetrics(selectedDistrictId, selectedMetric, selectedCrop);
     }
 
     render() {
         const { tenants, selectedTenant, regions, selectedRegionId, districts, selectedDistrictId, districtMetrics,
                 isPreviewOpen, postMetrics, csvFilePath, isTenantSelectDisabled, isGenerateTemplate, selectedMetric,
-                metrics, crops, selectedCrop, selectedMetricName, selectedCropName, csvDataContent } = this.state;
+                metrics, crops, selectedCrop, selectedMetricName, selectedCropName, csvDataContent, failedMetrics,
+                isFailedUploadViewOpen} = this.state;
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
@@ -626,6 +643,46 @@ class DistrictMetrics extends Component<Props, State> {
                         </Button>
                     </DialogActions>
                 </Dialog>
+                <Dialog open={isFailedUploadViewOpen}>
+                    <DialogTitle>Failed Uploads</DialogTitle>
+                    <DialogContent>
+                        <TableContainer>
+                            <Table aria-label="custom pagination table" stickyHeader>
+                                <TableHead style={{backgroundColor: 'whitesmoke'}}>
+                                    <TableRow>
+                                        <TableCell align="center">Year</TableCell>
+                                        <TableCell align="center">Value</TableCell>
+                                        <TableCell align="center">Crop Name</TableCell>
+                                        <TableCell align="center">Metric Name</TableCell>
+                                        <TableCell align="center">District Id</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {failedMetrics.map((fm) => (
+                                        <TableRow
+                                            key={fm.sequence}
+                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        >
+                                            <TableCell align="center">{fm.year}</TableCell>
+                                            <TableCell align="center">{fm.value}</TableCell>
+                                            <TableCell align="center">{fm.cropName}</TableCell>
+                                            <TableCell align="center">{fm.metricName}</TableCell>
+                                            <TableCell align="center">{fm.districtId}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            variant="contained"
+                            onClick={() => {this.onIsFailedUploadViewOpen()}}
+                        >
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Grid>
         );
     }
@@ -634,11 +691,8 @@ class DistrictMetrics extends Component<Props, State> {
         this.setState({isGenerateTemplate: false});
     }
 
-    onSaveGenerateTemplate() {
-        const {selectedTenant, selectedDistrictId, selectedMetric, selectedMetricName, selectedCrop, selectedCropName } = this.state;
-
+    onIsFailedUploadViewOpen() {
+        this.setState({isFailedUploadViewOpen: false});
     }
 }
-
-
 export default DistrictMetrics;
