@@ -155,7 +155,7 @@ class Purchases extends Component<Props, State> {
                                     <TableCell align="center">Field Name</TableCell>
                                     <TableCell align="center">Date</TableCell>
                                     <TableCell align="center">Status</TableCell>
-                                    <TableCell align="center">Other</TableCell>
+                                   {/* <TableCell align="center">Other</TableCell>*/}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -176,11 +176,11 @@ class Purchases extends Component<Props, State> {
                                         <TableCell align="center">{purchase.fieldName}</TableCell>
                                         <TableCell align="center">{purchase.date}</TableCell>
                                         <TableCell align="center">{purchase.status}</TableCell>
-                                        <TableCell align="center">
+                                       {/* <TableCell align="center">
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <Button value={purchase.fieldId}><AddCardIcon/></Button>
                                             </Stack>
-                                        </TableCell>
+                                        </TableCell>*/}
                                     </TableRow>
                                 ))}
                             </TableBody>

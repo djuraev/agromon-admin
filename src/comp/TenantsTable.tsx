@@ -43,7 +43,6 @@ class TenantsTable extends React.Component<Props, State> {
             .catch(error => {
                 alert(error);
             });
-
     }
     render() {
         const {tenants} = this.state;

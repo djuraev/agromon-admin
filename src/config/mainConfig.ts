@@ -1,7 +1,7 @@
 
 //export const mainServer = "http://localhost:8090/api";
-export const mainServer = "http://206.81.29.167:8090/api";
-//export const mainServer = "http://localhost:8090/api";
+//export const mainServer = "http://206.81.29.167:8090/api";
+export const mainServer = "http://localhost:8090/api";
 export const tenant = "/tenant";
 export const newTenant = "/tenant/tenants";
 export const regions = "/tenant/region/regions/id";
@@ -32,3 +32,4 @@ export const purchases = "/purchase/purchases";
 export const claim = "/claim";
 export const managers = "/auth/managers";
 export const manager = "/auth/manager";
+export const updateClaimStatus = "/claim/claims"

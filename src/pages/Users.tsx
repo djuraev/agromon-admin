@@ -416,7 +416,7 @@ class Users extends Component<Props, State> {
 
     handleRegionSelectChange(event: SelectChangeEvent) {
         const regionId = event.target.value;
-        this.setState({selectedRegionId: regionId});
+        this.setState({selectedRegionId: regionId, selectedDistrictId: '', districts: [], selectedVillageId: '', villages: []});
         this.getRegionDistricts(regionId, false);
     }
 
@@ -908,16 +908,16 @@ class Users extends Component<Props, State> {
                     <DialogContent>
                         <Grid container spacing={1} style={{marginTop: 5}} component={Paper}>
                             <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Country:</Typography></Grid>
-                            <Grid item xs={4}>{selectedUser.country}</Grid>
+                            <Grid item xs={4}>{selectedUser.tenantId}</Grid>
 
                             <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Region:</Typography></Grid>
-                            <Grid item xs={4}>{selectedUser.region}</Grid>
+                            <Grid item xs={4}>{selectedUser.regionSequence}</Grid>
 
                             <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>District:</Typography></Grid>
-                            <Grid item xs={4}>{selectedUser.district}</Grid>
+                            <Grid item xs={4}>{selectedUser.districtSequence}</Grid>
 
                             <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Village:</Typography></Grid>
-                            <Grid item xs={4}>{selectedUser.village}</Grid>
+                            <Grid item xs={4}>{selectedUser.villageSequence}</Grid>
                             <Grid item xs={12}><Divider/></Grid>
 
                             <Grid item xs={2}><Typography style={{fontWeight: 'bold'}}>Surname:</Typography></Grid>

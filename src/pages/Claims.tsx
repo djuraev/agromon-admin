@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import ClaimDto from '../data-model/ClaimDto';
 import TenantDto from '../data-model/TenantDto';
 import {
-    Button, Divider,
+    Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider,
     FormControl,
     Grid,
     InputLabel,
@@ -13,11 +13,11 @@ import {
     TableContainer,
     TableHead, TableRow
 } from '@mui/material';
-import AddCardIcon from '@mui/icons-material/AddCard';
 import LocationSearchingSharpIcon from '@mui/icons-material/LocationSearchingSharp';
 import AccountDto from '../data-model/AccountDto';
 import LocalStorageHelper from '../helper/LocalStorageHelper';
-import {claim, mainServer, tenant} from '../config/mainConfig';
+import {claim, mainServer, tenant, updateClaimStatus} from '../config/mainConfig';
+import CompareIcon from '@mui/icons-material/Compare';
 import axios from 'axios';
 
 interface Props {
@@ -34,6 +34,10 @@ interface State {
     currentUser: AccountDto;
     isTenantSelectDisabled: boolean;
     claimStatus: string;
+    selectedClaim: ClaimDto;
+    isClaimStatusChangeWindowOpen: boolean;
+    selectedClaimId: number;
+    selectedClaimStatusModal: string;
 }
 
 class Claims extends Component<Props, State> {
@@ -47,8 +51,12 @@ class Claims extends Component<Props, State> {
             page: 0,
             currentUser: AccountDto.sample(),
             isTenantSelectDisabled: false,
-            claimStatus: 'Submitted'
-        }
+            claimStatus: 'Submitted',
+            selectedClaim: ClaimDto.sample(),
+            isClaimStatusChangeWindowOpen: false,
+            selectedClaimId: -1,
+            selectedClaimStatusModal: '',
+    }
     }
 
     componentDidMount() {
@@ -112,17 +120,57 @@ class Claims extends Component<Props, State> {
         this.getClaims();
     }
 
-    handleChangeRowsPerPage(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const perPage = parseInt(event.target.value, 10);
-        this.setState({rowsPerPage: perPage, page: 0});
-    }
-
     handleClaimStatusChange(event: SelectChangeEvent) {
         this.setState({claimStatus: event.target.value});
     }
 
+    onClickStatusChangeButton(e: React.MouseEvent<HTMLButtonElement>) {
+        this.setState({isClaimStatusChangeWindowOpen: true});
+        const claimId = parseInt(e.currentTarget.value);
+        const {claims} = this.state;
+        const selectedClaim = claims.find(cl => cl.sequence === claimId);
+        // @ts-ignore
+        this.setState({selectedClaimId: claimId, selectedClaimStatusModal: selectedClaim.status, selectedClaim: selectedClaim})
+    }
+
+    handleStatusChange(event: SelectChangeEvent) {
+        this.setState({selectedClaimStatusModal: event.target.value});
+    }
+
+    handleModalCancel() {
+        this.setState({isClaimStatusChangeWindowOpen: false});
+    }
+
+    handleUpdateClaimStatusOK() {
+        const {selectedClaim, selectedClaimStatusModal} = this.state;
+        this.updateClaimStatus(selectedClaim.sequence, selectedClaimStatusModal);
+        this.setState({isClaimStatusChangeWindowOpen: false});
+    }
+
+    updateClaimStatus(claimId: number, status: string) {
+        //
+        const url = mainServer + updateClaimStatus + "/" + claimId;
+        const data = {
+            'status': status
+        }
+        axios.put(url, data)
+        .then(response => {
+            const requestFailed = response.data.requestFailed;
+            if (!requestFailed) {
+                alert("Claim status updated.");
+                this.getClaims();
+            } else {
+                alert(response.data.failureMessage.exceptionMessage);
+            }
+        })
+        .catch(error => {
+            alert(error);
+        });
+    }
+
     render() {
-        const {selectedTenant, tenants, claims, isTenantSelectDisabled, claimStatus} = this.state;
+        const {selectedTenant, tenants, claims, isTenantSelectDisabled, claimStatus, selectedClaim, isClaimStatusChangeWindowOpen,
+                    selectedClaimStatusModal} = this.state;
         const claimStatuses = ["Submitted", "Approved", "Rejected"];
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
@@ -211,7 +259,7 @@ class Claims extends Component<Props, State> {
                                         <TableCell align="center">{claim.date}</TableCell>
                                         <TableCell align="center">
                                             <Stack direction="row" spacing={1} alignItems="center">
-                                                <Button value={claim.fieldId}><AddCardIcon/></Button>
+                                                <Button value={claim.sequence} onClick={(event) => {this.onClickStatusChangeButton(event)}}><CompareIcon/></Button>
                                             </Stack>
                                         </TableCell>
                                 </TableRow>
@@ -223,6 +271,28 @@ class Claims extends Component<Props, State> {
             <Grid item xs={12}>
                 <Divider/>
             </Grid>
+                <Dialog open={isClaimStatusChangeWindowOpen} maxWidth="xs">
+                    <DialogTitle>Change Claim Status</DialogTitle>
+                    <DialogContent>
+                        <Select
+                            fullWidth
+                            value={selectedClaimStatusModal}
+                            onChange={(e)=> {this.handleStatusChange(e)}}
+                        >
+                            <MenuItem value={'Submitted'}>Submitted</MenuItem>
+                            <MenuItem value={'Approved'}>Approved</MenuItem>
+                            <MenuItem value={'Rejected'}>Rejected</MenuItem>
+                        </Select>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {this.handleUpdateClaimStatusOK()}}>Save</Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {this.handleModalCancel()}}>Cancel</Button>
+                    </DialogActions>
+                </Dialog>
         </Grid>
         );}
 }

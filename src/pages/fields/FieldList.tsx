@@ -90,7 +90,7 @@ class FieldList extends React.Component<Props, State> {
 
     handleRegionSelectChange(event: SelectChangeEvent) {
         const regionId = event.target.value;
-        this.setState({selectedRegionId: regionId});
+        this.setState({selectedRegionId: regionId, selectedDistrictId: '', selectedVillageId: '', districts: [], villages: []});
         this.getRegionDistricts(regionId);
     }
 
