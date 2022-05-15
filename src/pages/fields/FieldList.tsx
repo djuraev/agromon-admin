@@ -212,6 +212,33 @@ class FieldList extends React.Component<Props, State> {
             });
     }
 
+    handleDeleteFieldButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
+        const answer = window.confirm("Do you want to delete Field?");
+        if (!answer) {
+            return;
+        }
+        const selectedFieldId = parseInt(e.currentTarget.value);
+        // @ts-ignore
+        this.deleteField(selectedFieldId);
+    }
+
+    deleteField(fieldId: string) {
+        const url = mainServer + "/field/field/"+fieldId;
+        axios.delete(url)
+            .then(response => {
+                const requestFailed = response.data.requestFailed;
+                if (!requestFailed) {
+                    this.getFields();
+                    alert("Field Deleted.");
+                } else {
+                    alert(response.data.failureMessage.exceptionMessage);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
+    }
+
     render() {
         const { tenants, selectedTenant, regions, selectedRegionId,
             districts, selectedDistrictId, villages, selectedVillageId, fields, isTenantSelectDisabled} = this.state;
@@ -320,7 +347,7 @@ class FieldList extends React.Component<Props, State> {
                             {fields.map((field, idx) => (
 
                                 <TableRow
-                                    key={field.fieldId}
+                                    key={field.sequence}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
                                     <TableCell component="th" scope="row" align="center" width="30">
@@ -334,11 +361,11 @@ class FieldList extends React.Component<Props, State> {
                                     <TableCell align="center">{field.center}</TableCell>
                                     <TableCell align="center">{field.cropName}</TableCell>
                                     <TableCell align="center">
-                                        <Stack direction="row" spacing={1} alignItems="center">
-                                            <Button value={field.fieldId}><AddCardIcon/></Button>
-                                            <Button value={field.fieldId}><AssistantDirectionIcon/></Button>
-                                            <Button value={field.fieldId}><DeleteIcon/></Button>
-                                        </Stack>
+                                        {/*<Stack direction="row" spacing={1} alignItems="center">*/}
+                                            {/*<Button value={field.sequence}><AddCardIcon/></Button>
+                                            <Button value={field.sequence}><AssistantDirectionIcon/></Button>*/}
+                                            <Button value={field.sequence} onClick={(e) => {this.handleDeleteFieldButtonClick(e)}}><DeleteIcon/></Button>
+                                        {/*</Stack>*/}
                                     </TableCell>
                                 </TableRow>
                             ))}

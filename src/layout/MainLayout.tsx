@@ -176,11 +176,11 @@ class MainLayout extends Component<Props, State> {
                     <Grid item xs={2} style={{backgroundColor: '#202020', height: '95vh'}}>
                     <ProSidebar style={{backgroundColor: '#202020'}}>
                             <Menu iconShape="square" style={{alignItems: 'center'}}>
-                            <MenuItem icon={<DashboardRoundedIcon />}>
+                            {/*<MenuItem icon={<DashboardRoundedIcon />}>
                                 <Link to={"/dashboard"}>
                                     Dashboard
                                 </Link>
-                            </MenuItem>
+                            </MenuItem>*/}
                             <SubMenu icon={<PublicRoundedIcon/>} title="Tenant">
                                 <MenuItem icon={<LanguageIcon/>}>
                                     <Link to={"/tenants"}>
@@ -259,9 +259,9 @@ class MainLayout extends Component<Props, State> {
                 </Grid>
                     <Grid item xs={10} style={{height: '95vh'}}>
                         <Switch>
-                            <Route path='/dashboard'>
+                           {/* <Route path='/dashboard'>
                                 <Dashboard/>
-                            </Route>
+                            </Route>*/}
                             <Route path='/tenants'>
                                 <Tenants/>
                             </Route>

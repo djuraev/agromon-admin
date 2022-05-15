@@ -1,5 +1,5 @@
 class FieldDto {
-    fieldId: number = 0;
+    sequence: number = 0;
     tenantId: number = 0;
     username: string = '';
     villageSequence: number = 0;

@@ -960,7 +960,7 @@ class Users extends Component<Props, State> {
                                    <Paper style={{padding: 5, margin: 5}}>
                                     <Grid container spacing={1}>
                                         <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}> Field Id:</Typography></Grid>
-                                        <Grid item xs={3}>{field.fieldId}</Grid>
+                                        <Grid item xs={3}>{field.sequence}</Grid>
 
                                         <Grid item xs={3}><Typography style={{fontWeight: 'bold'}}>Field Name:</Typography></Grid>
                                         <Grid item xs={3}>{field.name}</Grid>
