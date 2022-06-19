@@ -1,7 +1,10 @@
 
 //export const mainServer = "http://localhost:8090/api";
-//export const mainServer = "http://206.81.29.167:8090/api";
-export const mainServer = "http://localhost:8090/api";
+export const mainServerA = "http://206.81.29.167:8090";
+export const mainServer = "http://206.81.29.167:8090/api";
+
+//export const mainServerA = "http://localhost:8090";
+//export const mainServer = "http://localhost:8090/api";
 export const tenant = "/tenant";
 export const newTenant = "/tenant/tenants";
 export const regions = "/tenant/region/regions/id";

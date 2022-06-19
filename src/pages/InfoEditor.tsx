@@ -8,11 +8,12 @@ import {
     InputLabel,
     MenuItem,
     Paper,
-    Select, SelectChangeEvent
+    Select, SelectChangeEvent, TextField
 } from '@mui/material';
+import LinkIcon from '@mui/icons-material/Link';
 
 import axios from 'axios';
-import {mainServer} from '../config/mainConfig';
+import {mainServer, mainServerA} from '../config/mainConfig';
 
 
 
@@ -24,6 +25,7 @@ interface State {
     selectedPage: string;
     selectedLanguage: string;
     selectedFile: FileList | null;
+    youtubeUrl: string;
 }
 
 class InfoEditor extends React.Component<Props, State> {
@@ -34,6 +36,7 @@ class InfoEditor extends React.Component<Props, State> {
             selectedLanguage: '',
             selectedPage: '',
             selectedFile: null,
+            youtubeUrl: '',
         }
     }
 
@@ -43,6 +46,11 @@ class InfoEditor extends React.Component<Props, State> {
 
     handlePageChange(event: SelectChangeEvent) {
         this.setState({selectedPage: event.target.value});
+    }
+
+    handleYTUrlChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        //
+        this.setState({youtubeUrl: event.target.value});
     }
 
     uploadHtmlFile() {
@@ -81,6 +89,31 @@ class InfoEditor extends React.Component<Props, State> {
             .catch(error => alert(JSON.stringify(error)));
     }
 
+    handleYTSaveButtonClick() {
+        //
+        const {youtubeUrl} = this.state;
+        const url = mainServerA + "/api-info/api-info";
+        if (!youtubeUrl) {
+            alert("Please, enter valid Youtube URL.");
+            return;
+        }
+        const data = {
+            "apiKey": "demo",
+            "isExpired": false,
+            "apiName" : youtubeUrl
+        };
+        axios.put(url, data)
+            .then(response => {
+                if (response.data.requestFailed) {
+                    alert(response.data.failureMessage);
+                }
+                else {
+                    alert("URL has been saved.");
+                }
+            })
+            .catch(error => alert(JSON.stringify(error)));
+    }
+
     handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         // @ts-ignore
         const fileList = e.target.files;
@@ -102,6 +135,24 @@ class InfoEditor extends React.Component<Props, State> {
         return (
             <Grid container component={Paper} style={{margin: 20, padding: 20, width: '97%'}}>
                 <Grid item xs={12}>
+                    <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                placeholder="Please, enter YouTube URL"
+                                onChange={(event) => {this.handleYTUrlChange(event)}}></TextField>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Button
+                                variant="contained"
+                                style={{height: '100%'}}
+                                onClick={() => {this.handleYTSaveButtonClick()}}
+                                >
+                                <LinkIcon/>
+                                &nbsp;&nbsp;Save
+                            </Button>
+                        </Grid>
+                    </Grid>
                     <Grid container component={Paper} spacing={1} style={{paddingBottom: 20, marginLeft: 0}}>
                         <Grid item xs={3}>
                             <FormControl fullWidth size={'small'}>
